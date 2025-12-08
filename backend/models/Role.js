@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { updateMany } = require("./User");
 
 const roleSchema = new mongoose.Schema(
   {
@@ -10,9 +9,9 @@ const roleSchema = new mongoose.Schema(
       upercase: true,
       trim: true,
     },
-    
+
     permissions: {
-      type: [String],
+      type: String,
       required: true,
     },
 
@@ -25,3 +24,7 @@ const roleSchema = new mongoose.Schema(
 
   { timestamps: true, versionKey: false }
 );
+
+const Role = mongoose.model("Role", roleSchema);
+
+module.exports = Role;

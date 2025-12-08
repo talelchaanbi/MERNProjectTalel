@@ -25,6 +25,13 @@ const userSchema = new mongoose.Schema(
       required: false,
       default: "https://avatar.iran.liara.run/public",
     },
+
+    role : {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
+      required: true,
+    },
+
     password: {
       type: String,
       required: true,
