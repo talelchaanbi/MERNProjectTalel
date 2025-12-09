@@ -1,4 +1,5 @@
 const path = require('path');
+const mongoose = require('mongoose');
 const connectDB = require('../connectDB');
 const Role = require('../../models/Role');
 
@@ -22,29 +23,32 @@ const roles = [
   }
 ];
 
+const runAsScript = require.main === module;
+
 async function seedRoles() {
   try {
-    await connectDB();
-
-    for (const role of roles) {
-      const exists = await Role.findOne({ lib: role.lib });
-      if (exists) {
-        console.log(`Role already exists: ${role.lib}`);
-        continue;
-      }
-      await Role.create(role);
-      console.log(`Created role: ${role.lib}`);
+    if (mongoose.connection.readyState === 0) {
+      await connectDB();
     }
 
+    const existingCount = await Role.countDocuments();
+    if (existingCount > 0) {
+      console.log('Roles already seeded');
+      if (runAsScript) process.exit(0);
+      return;
+    }
+
+    await Role.insertMany(roles);
     console.log('Role seeding complete');
-    process.exit(0);
+    if (runAsScript) process.exit(0);
   } catch (error) {
     console.error('Error seeding roles:', error.message);
-    process.exit(1);
+    if (runAsScript) process.exit(1);
+    else throw error;
   }
 }
 
-if (require.main === module) {
+if (runAsScript) {
   seedRoles();
 }
 
