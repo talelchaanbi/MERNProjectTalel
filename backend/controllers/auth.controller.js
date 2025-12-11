@@ -6,13 +6,13 @@ const bcrypt = require('bcrypt');
 //register controller
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, phone, role} = req.body;
-    let profilePicture = null;
-     
+    const { username, email, password, phone, role } = req.body;
+    let profilePicture;
+
     //profile picture ajout
     if (req.file) {
-        profilePicture = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-    }   
+      profilePicture = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
 
     //validate inputs
 
@@ -41,14 +41,19 @@ exports.register = async (req, res) => {
     }
 
     //create new user
-    user = new User({
+    const userData = {
       username,
       email,
       password,
       phone,
       role: foundRole._id,
-      profilePicture,
-    });
+    };
+
+    if (profilePicture) {
+      userData.profilePicture = profilePicture;
+    }
+
+    user = new User(userData);
 
     //hash password
     const salt = await bcrypt.genSalt(10);
@@ -77,11 +82,88 @@ exports.register = async (req, res) => {
 //login controller
 exports.login = async (req, res) => {
   try {
-  } catch (error) {}
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ msg: 'Email and password are required' });
+    }
+
+    const user = await User.findOne({ email }).populate('role');
+    if (!user) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    req.session.userId = user._id.toString();
+    req.session.userRole = user.role?.lib;
+
+    res.json({
+      msg: 'Login successful',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role?.lib,
+        profilePicture: user.profilePicture,
+      },
+    });
+  } catch (error) {
+    console.error('Error in login:', error.message);
+    res.status(500).send('Server error');
+  }
 };
 
 //current user controller
 exports.currentUser = async (req, res) => {
   try {
-  } catch (error) {}
+    const user = await User.findById(req.userId).populate('role');
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    res.json({
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role?.lib,
+        profilePicture: user.profilePicture,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching current user:', error.message);
+    res.status(500).send('Server error');
+  }
+};
+
+//logout controller
+exports.logout = async (req, res) => {
+  try {
+    if (!req.session) {
+      return res.status(400).json({ msg: 'No active session' });
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.status(500).send('Server error');
+      }
+
+  res.clearCookie('sid', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      });
+
+      return res.json({ msg: 'Logout successful' });
+    });
+  } catch (error) {
+    console.error('Error during logout:', error.message);
+    res.status(500).send('Server error');
+  }
 };
