@@ -57,11 +57,13 @@ app.use(
 
 const connectDB = require('./config/connectDB');
 const seedRoles = require('./config/seed/seedRoles');
+const seedAdminUser = require('./config/seed/seedAdminUser');
 
 const startServer = async () => {
   try {
     await connectDB();
     await seedRoles();
+    await seedAdminUser();
 
     // routes
     app.use('/api/auth', require('./routes/auth.route'));

@@ -1,12 +1,22 @@
 const express = require('express');
 const { register, login, currentUser, logout } = require('../controllers/auth.controller');
+const { validateRegister, validateLogin } = require('../controllers/validations/authValidations');
+const { validate } = require('../controllers/validations/validator');
 const upload = require('../utils/multer');
 const auth = require('../middleware/auth');
+const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
-router.post('/register', upload.single('profilePicture'), register);
-router.post('/login', login);
+router.post(
+	'/register',
+	auth,
+	requireRole('ADMIN'),
+	upload.single('profilePicture'),
+	validate(validateRegister),
+	register
+);
+router.post('/login', validate(validateLogin), login);
 router.get('/me', auth, currentUser);
 router.post('/logout', auth, logout);
 
