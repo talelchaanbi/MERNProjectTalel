@@ -36,6 +36,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   { timestamps: true, versionKey: false }
