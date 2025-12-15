@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../store/authSlice';
+import { AlertTriangle } from 'lucide-react';
 
 const INITIAL_FORM = {
   email: '',
@@ -7,7 +9,8 @@ const INITIAL_FORM = {
 };
 
 export default function LoginForm() {
-  const { login, status } = useAuth();
+  const dispatch = useDispatch();
+  const { status } = useSelector((state) => state.auth);
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState([]);
 
@@ -20,15 +23,16 @@ export default function LoginForm() {
     event.preventDefault();
     setErrors([]);
     try {
-      await login(form);
-    } catch (err) {
-      const serverErrors = err.response?.data?.errors;
-      if (Array.isArray(serverErrors) && serverErrors.length) {
-        setErrors(serverErrors.map((item) => item.message || 'Erreur de validation'));
-      } else if (err.message) {
-        setErrors([err.message]);
+      await dispatch(loginUser(form)).unwrap();
+    } catch (errPayload) {
+      if (Array.isArray(errPayload)) {
+        setErrors(errPayload.map((item) => item.msg || item.message || 'Erreur de validation'));
+      } else if (typeof errPayload === 'string') {
+        setErrors([errPayload]);
+      } else if (errPayload?.msg) {
+        setErrors([errPayload.msg]);
       } else {
-        setErrors(['Une erreur est survenue']);
+        setErrors(['Une erreur est survenue lors de la connexion']);
       }
     }
   };
@@ -61,9 +65,12 @@ export default function LoginForm() {
           />
         </label>
         {errors.length > 0 && (
-          <div className="form-error">
+          <div className="form-error-container">
             {errors.map((message, index) => (
-              <p key={index}>{message}</p>
+              <div key={index} className="form-error-item">
+                <AlertTriangle size={16} />
+                <span>{message}</span>
+              </div>
             ))}
           </div>
         )}

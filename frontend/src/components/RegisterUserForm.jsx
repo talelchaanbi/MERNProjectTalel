@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
-import { registerUser } from '../services/auth';
+import { useMemo, useRef, useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser, resetRegisterStatus } from '../store/authSlice';
 
 const ROLES = [
   { value: 'ADMIN', label: 'Administrateur' },
@@ -17,11 +18,18 @@ const INITIAL_FORM = {
 };
 
 export default function RegisterUserForm() {
+  const dispatch = useDispatch();
+  const { registerStatus } = useSelector((state) => state.auth);
   const [form, setForm] = useState(() => ({ ...INITIAL_FORM }));
-  const [status, setStatus] = useState('idle');
   const [errors, setErrors] = useState([]);
   const [success, setSuccess] = useState(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetRegisterStatus());
+    };
+  }, [dispatch]);
 
   const canSubmit = useMemo(() => {
     return (
@@ -43,7 +51,7 @@ export default function RegisterUserForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!canSubmit || status === 'loading') return;
+    if (!canSubmit || registerStatus === 'loading') return;
 
     const payload = new FormData();
     payload.append('username', form.username.trim());
@@ -57,30 +65,22 @@ export default function RegisterUserForm() {
       payload.append('profilePicture', form.profilePicture);
     }
 
-    setStatus('loading');
     setErrors([]);
     setSuccess(null);
 
     try {
-      const { user } = await registerUser(payload);
+      const user = await dispatch(registerUser(payload)).unwrap();
       setSuccess(`Utilisateur ${user.username} créé avec succès.`);
       setForm({ ...INITIAL_FORM });
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    } catch (err) {
-      const details = err.response?.data?.errors;
-      if (Array.isArray(details) && details.length) {
-        setErrors(details.map((item) => item.message || 'Erreur de validation'));
-      } else if (err.response?.data?.msg) {
-        setErrors([err.response.data.msg]);
-      } else if (err.message) {
-        setErrors([err.message]);
+    } catch (errPayload) {
+      if (Array.isArray(errPayload)) {
+        setErrors(errPayload.map((item) => item.msg || item.message || 'Erreur de validation'));
       } else {
-        setErrors(['Impossible de créer cet utilisateur']);
+        setErrors([errPayload]);
       }
-    } finally {
-      setStatus('idle');
     }
   };
 
@@ -158,8 +158,8 @@ export default function RegisterUserForm() {
           </div>
         )}
         {success && <p className="form-success">{success}</p>}
-        <button type="submit" disabled={!canSubmit || status === 'loading'}>
-          {status === 'loading' ? 'Création…' : 'Créer'}
+        <button type="submit" disabled={!canSubmit || registerStatus === 'loading'}>
+          {registerStatus === 'loading' ? 'Création…' : 'Créer'}
         </button>
       </form>
     </div>

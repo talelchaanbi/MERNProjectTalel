@@ -113,6 +113,10 @@ exports.login = async (req, res) => {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({ msg: 'Account is disabled' });
+    }
+
     user.isOnline = true;
     await user.save();
 
@@ -199,6 +203,133 @@ exports.getAllUsers = async (req, res) => {
       role: u.role?.lib || 'UNKNOWN'
     }));
     res.json(formattedUsers);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Update Profile (Self)
+exports.updateProfile = async (req, res) => {
+  try {
+    const { username, phone } = req.body;
+    const user = await User.findById(req.userId).populate('role');
+
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    if (username) user.username = username;
+    if (phone) user.phone = phone;
+    
+    if (req.file) {
+      user.profilePicture = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    await user.save();
+
+    res.json({
+      msg: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role?.lib,
+        profilePicture: user.profilePicture,
+        phone: user.phone
+      }
+    });
+  } catch (err) {
+    console.error(err.message);
+    await removeUploadedFile(req.file);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Update User Status (Admin) - Soft Delete/Restore
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    user.isActive = isActive;
+    if (!isActive) {
+      user.isOnline = false; // Force offline if deactivated
+    }
+    
+    await user.save();
+    res.json({ msg: `User ${isActive ? 'activated' : 'deactivated'} successfully`, user });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Delete User (Admin)
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ msg: 'User deleted successfully', id: req.params.id });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Update User by Admin
+exports.updateUserByAdmin = async (req, res) => {
+  try {
+    const { username, email, phone, role } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    if (username) user.username = username;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+    
+    if (role) {
+       const foundRole = await Role.findOne({ lib: role });
+       if (foundRole) user.role = foundRole._id;
+    }
+
+    if (req.file) {
+      user.profilePicture = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    await user.save();
+    
+    // Re-populate for response
+    await user.populate('role');
+
+    res.json({
+      msg: 'User updated successfully',
+      user: {
+        ...user.toObject(),
+        role: user.role?.lib
+      }
+    });
+  } catch (err) {
+    console.error(err.message);
+    await removeUploadedFile(req.file);
+    res.status(500).send('Server Error');
+  }
+};
+
+// Get User By Id (Admin)
+exports.getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate('role').select('-password');
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    
+    res.json({
+      ...user.toObject(),
+      role: user.role?.lib
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

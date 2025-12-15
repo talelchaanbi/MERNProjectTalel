@@ -25,3 +25,32 @@ export async function fetchAllUsers() {
   const { data } = await client.get('/auth/users');
   return data;
 }
+
+export async function updateProfile(formData) {
+  const { data } = await client.put('/auth/me', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}
+
+export async function updateUserStatus(userId, isActive) {
+  const { data } = await client.put(`/auth/users/${userId}/status`, { isActive });
+  return data;
+}
+
+export async function deleteUser(userId) {
+  const { data } = await client.delete(`/auth/users/${userId}`);
+  return data;
+}
+
+export async function updateUserByAdmin(userId, formData) {
+  const { data } = await client.put(`/auth/users/${userId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}
+
+export async function getUserById(userId) {
+  const { data } = await client.get(`/auth/users/${userId}`);
+  return data;
+}

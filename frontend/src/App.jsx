@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUser, logoutUser } from './store/authSlice';
 import './App.css';
-import { useAuth } from './context/AuthContext';
 import CurrentUserCard from './components/CurrentUserCard';
 import LoginForm from './components/LoginForm';
 import RegisterUserForm from './components/RegisterUserForm';
@@ -8,8 +9,18 @@ import Navbar from './components/Navbar';
 import UserList from './components/UserList';
 
 function App() {
-  const { user, status, logout, isAuthenticated } = useAuth();
+  const dispatch = useDispatch();
+  const { user, status } = useSelector((state) => state.auth);
+  const isAuthenticated = Boolean(user);
   const [view, setView] = useState('dashboard');
+
+  useEffect(() => {
+    dispatch(fetchUser());
+  }, [dispatch]);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+  };
 
   if (status === 'loading' && !isAuthenticated) {
     return (
@@ -34,7 +45,7 @@ function App() {
 
   return (
     <div className="app">
-      <Navbar user={user} logout={logout} setView={setView} currentView={view} />
+      <Navbar user={user} logout={handleLogout} setView={setView} currentView={view} />
       
       <main className="app-main">
         {view === 'dashboard' && (
