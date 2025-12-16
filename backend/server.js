@@ -1,12 +1,27 @@
 const path = require('path');
 const https = require('https');
 const fs = require('fs');
+const dns = require('dns');
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 require('dotenv').config();
 
 const app = express();
+
+const configureMongoDnsServers = () => {
+  const raw = process.env.MONGO_DNS_SERVERS;
+  if (!raw) return;
+
+  const servers = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (servers.length === 0) return;
+  dns.setServers(servers);
+  console.log(`Using custom DNS servers for MongoDB lookups: ${servers.join(', ')}`);
+};
 
 // Azure/App Service runs behind a reverse proxy (TLS terminates at the edge).
 // Trust X-Forwarded-* so secure cookies work in production.
@@ -39,36 +54,39 @@ if (process.env.HTTPS_ENABLED === 'true') {
   cookieConfig.sameSite = 'none';
 }
 
-const sessionStore = MongoStore.create({
-  mongoUrl: process.env.MONGO_URI,
-  dbName: process.env.MONGO_DB_NAME,
-  collectionName: 'sessions',
-  ttl: sessionHours * 60 * 60,
-});
-
-sessionStore.on('error', (err) => {
-  console.error('Session store error:', err);
-});
-
-app.use(
-  session({
-    name: 'sid',
-    secret: sessionSecret,
-    proxy: process.env.NODE_ENV === 'production',
-    resave: false,
-    saveUninitialized: false,
-    store: sessionStore,
-    cookie: cookieConfig,
-  })
-);
-
 const connectDB = require('./config/connectDB');
 const seedRoles = require('./config/seed/seedRoles');
 const seedAdminUser = require('./config/seed/seedAdminUser');
 
 const startServer = async () => {
   try {
-    await connectDB();
+    configureMongoDnsServers();
+
+    const { mongoUri, dbName } = await connectDB();
+
+    const sessionStore = MongoStore.create({
+      mongoUrl: mongoUri,
+      dbName,
+      collectionName: 'sessions',
+      ttl: sessionHours * 60 * 60,
+    });
+
+    sessionStore.on('error', (err) => {
+      console.error('Session store error:', err);
+    });
+
+    app.use(
+      session({
+        name: 'sid',
+        secret: sessionSecret,
+        proxy: process.env.NODE_ENV === 'production',
+        resave: false,
+        saveUninitialized: false,
+        store: sessionStore,
+        cookie: cookieConfig,
+      })
+    );
+
     await seedRoles();
     await seedAdminUser();
 
@@ -123,7 +141,20 @@ const startServer = async () => {
       });
     }
   } catch (error) {
-    console.error('Server bootstrap failed:', error.message);
+    const details = `${error?.code ? `${error.code}: ` : ''}${error?.message || error}`;
+    console.error('Server bootstrap failed:', details);
+
+    if (
+      String(details).includes('queryTxt') ||
+      error?.code === 'ETIMEOUT' ||
+      error?.code === 'ENOTFOUND' ||
+      error?.code === 'EAI_AGAIN'
+    ) {
+      console.error(
+        'Hint: this looks like a DNS/TXT lookup issue resolving an Atlas `mongodb+srv://` URI. ' +
+          'Try setting `MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8` or provide `MONGO_URI_DIRECT` (non-SRV) as a fallback.'
+      );
+    }
     process.exit(1);
   }
 };

@@ -28,6 +28,13 @@ Create `backend/.env` (values below are examples):
 
 ```
 MONGO_URI=mongodb+srv://user:password@cluster0.mongodb.net/mernproject
+
+# Optional: override DNS resolvers used for Atlas SRV TXT lookups
+MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8
+
+# Optional: fallback if your network blocks SRV/TXT lookups (use Atlas "Standard connection string")
+MONGO_URI_DIRECT=mongodb://user:password@host1:27017,host2:27017,host3:27017/mernproject?replicaSet=...&ssl=true&authSource=admin
+
 MONGO_DB_NAME=mernproject
 SESSION_SECRET=supersecurecookiesecret
 SESSION_MAX_AGE_HOURS=6
@@ -36,6 +43,14 @@ HTTPS_KEY_PATH=certs/server.key
 HTTPS_CERT_PATH=certs/server.crt
 PORT=4500
 ```
+
+## Troubleshooting: `queryTxt ETIMEOUT ...mongodb.net`
+
+If you see `MongoDB connection failed: ETIMEOUT: queryTxt ...`, your network/DNS is timing out on the Atlas SRV/TXT lookup used by `mongodb+srv://`.
+
+- First try: set `MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8`
+- If it still fails: set `MONGO_URI_DIRECT` to the Atlas **Standard connection string (mongodb://)**
+- Also check Atlas **Network Access** allows your current IP (or temporarily `0.0.0.0/0` for dev)
 
 ## Optional: Self-signed HTTPS (development)
 
