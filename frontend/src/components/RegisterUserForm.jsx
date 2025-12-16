@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser, resetRegisterStatus } from '../store/authSlice';
+import { AlertTriangle } from 'lucide-react';
 
 const ROLES = [
   { value: 'ADMIN', label: 'Administrateur' },
@@ -78,8 +79,12 @@ export default function RegisterUserForm() {
     } catch (errPayload) {
       if (Array.isArray(errPayload)) {
         setErrors(errPayload.map((item) => item.msg || item.message || 'Erreur de validation'));
-      } else {
+      } else if (typeof errPayload === 'string') {
         setErrors([errPayload]);
+      } else if (typeof errPayload === 'object') {
+        setErrors([errPayload.msg || errPayload.message || 'Une erreur est survenue']);
+      } else {
+        setErrors(['Une erreur est survenue lors de la création']);
       }
     }
   };
@@ -151,9 +156,12 @@ export default function RegisterUserForm() {
           />
         </label>
         {errors.length > 0 && (
-          <div className="form-error">
+          <div className="form-error-container">
             {errors.map((message, index) => (
-              <p key={index}>{message}</p>
+              <div key={index} className="form-error-item">
+                <AlertTriangle size={16} />
+                <span>{message}</span>
+              </div>
             ))}
           </div>
         )}

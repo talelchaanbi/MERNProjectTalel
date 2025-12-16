@@ -13,16 +13,17 @@ function App() {
   const { user, status } = useSelector((state) => state.auth);
   const isAuthenticated = Boolean(user);
   const [view, setView] = useState('dashboard');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
-    dispatch(fetchUser());
+    dispatch(fetchUser()).finally(() => setIsInitialLoad(false));
   }, [dispatch]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
   };
 
-  if (status === 'loading' && !isAuthenticated) {
+  if (isInitialLoad) {
     return (
       <div className="app loading">
         <p>Chargement…</p>

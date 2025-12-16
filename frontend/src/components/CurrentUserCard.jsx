@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateProfile } from '../store/authSlice';
+import { AlertTriangle } from 'lucide-react';
 
 export default function CurrentUserCard({ user }) {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
+  const [errors, setErrors] = useState([]);
   const [form, setForm] = useState({
     username: user?.username || '',
     phone: user?.phone || '',
@@ -39,12 +41,20 @@ export default function CurrentUserCard({ user }) {
     if (form.profilePicture) {
       formData.append('profilePicture', form.profilePicture);
     }
-
     try {
       await dispatch(updateProfile(formData)).unwrap();
       setIsEditing(false);
-    } catch (err) {
-      alert('Erreur lors de la mise à jour');
+      setErrors([]);
+    } catch (errPayload) {
+      if (Array.isArray(errPayload)) {
+        setErrors(errPayload.map((item) => item.msg || item.message || 'Erreur de validation'));
+      } else if (typeof errPayload === 'string') {
+        setErrors([errPayload]);
+      } else if (typeof errPayload === 'object') {
+        setErrors([errPayload.msg || errPayload.message || 'Une erreur est survenue']);
+      } else {
+        setErrors(['Erreur lors de la mise à jour']);
+      }
     }
   };
 
@@ -53,6 +63,16 @@ export default function CurrentUserCard({ user }) {
       <div className="card">
         <h2>Modifier mon profil</h2>
         <form onSubmit={handleSubmit} className="form">
+          {errors.length > 0 && (
+            <div className="form-error-container">
+              {errors.map((message, index) => (
+                <div key={index} className="form-error-item">
+                  <AlertTriangle size={16} />
+                  <span>{message}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <label className="form-label">
             Nom d'utilisateur
             <input 

@@ -9,7 +9,7 @@ export const loginUser = createAsyncThunk('auth/login', async (credentials, { re
     if (err.response?.data?.errors) {
       return rejectWithValue(err.response.data.errors);
     }
-    return rejectWithValue(err.response?.data?.msg || 'Login failed');
+    return rejectWithValue(err.response?.data?.msg || err.response?.data?.message || 'Login failed');
   }
 });
 
@@ -21,7 +21,7 @@ export const registerUser = createAsyncThunk('auth/register', async (formData, {
     if (err.response?.data?.errors) {
       return rejectWithValue(err.response.data.errors);
     }
-    return rejectWithValue(err.response?.data?.msg || 'Registration failed');
+    return rejectWithValue(err.response?.data?.msg || err.response?.data?.message || 'Registration failed');
   }
 });
 

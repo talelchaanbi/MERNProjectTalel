@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateUserByAdmin } from '../store/authSlice';
-import { X, Save, User, Mail, Phone, Shield, Camera, Edit2, Power, Wifi, WifiOff } from 'lucide-react';
+import { X, Save, User, Mail, Phone, Shield, Camera, Edit2, Power, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 
 const ROLES = [
   { value: 'ADMIN', label: 'Administrateur' },
@@ -12,6 +12,7 @@ const ROLES = [
 export default function UserModal({ user, onClose, mode = 'view' }) {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(mode === 'edit');
+  const [errors, setErrors] = useState([]);
   const [form, setForm] = useState({
     username: user?.username || '',
     email: user?.email || '',
@@ -55,12 +56,19 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
     if (form.profilePicture) {
       formData.append('profilePicture', form.profilePicture);
     }
-
     try {
       await dispatch(updateUserByAdmin({ id: user._id, formData })).unwrap();
       onClose(true); // true indicates success/refresh needed
-    } catch (err) {
-      alert('Erreur lors de la mise à jour');
+    } catch (errPayload) {
+      if (Array.isArray(errPayload)) {
+        setErrors(errPayload.map((item) => item.msg || item.message || 'Erreur de validation'));
+      } else if (typeof errPayload === 'string') {
+        setErrors([errPayload]);
+      } else if (typeof errPayload === 'object') {
+        setErrors([errPayload.msg || errPayload.message || 'Une erreur est survenue']);
+      } else {
+        setErrors(['Erreur lors de la mise à jour']);
+      }
     }
   };
 
@@ -116,6 +124,16 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
         {isEditing ? (
           <form onSubmit={handleSubmit} className="form modal-body modal-form">
             <div className="modal-scroll-area">
+              {errors.length > 0 && (
+                <div className="form-error-container" style={{ margin: '0 1.5rem 1rem 1.5rem' }}>
+                  {errors.map((message, index) => (
+                    <div key={index} className="form-error-item">
+                      <AlertTriangle size={16} />
+                      <span>{message}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="form-sections">
                 <section className="form-section">
                   <div className="form-section-header">
