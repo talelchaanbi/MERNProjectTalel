@@ -49,11 +49,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6D9F4F48B7D14203A3CAD2BAB00277F8 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B7838393FE3045D1A2DE11928C1959ED }}
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'mernproject-talel-2025'
-          slot-name: 'Production'
-          package: .
-          
+          app-name: mernproject-talel-2025
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: backend
