@@ -12,11 +12,11 @@
   {
     "id": 3,
     "title": "Resolve git divergence before build",
-    "status": "in-progress"
+    "status": "completed"
   },
   {
     "id": 4,
     "title": "Run local build to prepare deploy",
-    "status": "not-started"
+    "status": "completed"
   }
 ]
