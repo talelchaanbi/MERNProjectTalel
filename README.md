@@ -118,3 +118,60 @@ backend/
 - Rate-limit login attempts
 - Add CSRF protection for cookie-based sessions
 - Implement refresh tokens or MFA if requirements grow
+
+## Deployment (Azure App Service + MongoDB Atlas)
+
+This repo is set up so Azure can deploy the whole repository as a single Node app:
+
+- Root `package.json` builds the React app (`frontend/`) and copies it into `backend/public/`.
+- `backend/server.js` serves the SPA in production (and still serves `/api/*` + `/uploads`).
+
+### 1) MongoDB Atlas
+
+- Create a cluster and database user.
+- Add Network Access:
+  - For a quick test: allow `0.0.0.0/0` (not recommended long-term)
+  - Better: allow your Azure App Service outbound IPs.
+
+### 2) Azure Web App
+
+- Create **Web App** (Linux) with **Node.js** runtime.
+- Deployment source: GitHub (recommended) or Local Git.
+
+### 3) App Service Configuration (Environment Variables)
+
+In **App Service → Configuration → Application settings**, set:
+
+- `NODE_ENV=production`
+- `MONGO_URI=...` (your Atlas connection string)
+- `MONGO_DB_NAME=mernproject`
+- `SESSION_SECRET=...` (long random string)
+- `SESSION_MAX_AGE_HOURS=6`
+- `HTTPS_ENABLED=false`
+- `CLEAR_SESSIONS_ON_STARTUP=false`
+
+Do not hardcode `PORT` on Azure; App Service injects it and the server uses `process.env.PORT`.
+
+### 4) Startup Command
+
+Set the startup command to:
+
+```bash
+npm start
+```
+
+### 5) What Azure Builds
+
+Azure will run the root scripts:
+
+- `postinstall`: installs `backend/` + `frontend/` dependencies
+- `build`: builds `frontend/` and copies output into `backend/public/`
+- `start`: runs the backend server
+
+### 6) Verify
+
+Open your App Service URL and verify:
+
+- Frontend loads (served by Express)
+- API works under `/api/auth/*`
+- Uploads are reachable under `/uploads/*`

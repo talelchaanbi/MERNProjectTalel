@@ -8,9 +8,15 @@ require('dotenv').config();
 
 const app = express();
 
+// Azure/App Service runs behind a reverse proxy (TLS terminates at the edge).
+// Trust X-Forwarded-* so secure cookies work in production.
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // middleware
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -48,6 +54,7 @@ app.use(
   session({
     name: 'sid',
     secret: sessionSecret,
+    proxy: process.env.NODE_ENV === 'production',
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
@@ -68,12 +75,26 @@ const startServer = async () => {
     // routes
     app.use('/api/auth', require('./routes/auth.route'));
 
+    // Serve React build (copied to backend/public) in production.
+    const publicDir = path.join(__dirname, 'public');
+    const indexHtmlPath = path.join(publicDir, 'index.html');
+    if (fs.existsSync(indexHtmlPath)) {
+      app.use(express.static(publicDir));
+      // Express 5 route pattern: use regex ("*") can be problematic.
+      app.get(/^(?!\/api).*/, (req, res) => res.sendFile(indexHtmlPath));
+    }
+
     const PORT = process.env.PORT || 4500;
 
-  await sessionStore.clear();
-  console.log('Session store cleared (startup)');
+    const clearSessionsOnStartup =
+      process.env.CLEAR_SESSIONS_ON_STARTUP === 'true' &&
+      process.env.NODE_ENV !== 'production';
+    if (clearSessionsOnStartup) {
+      await sessionStore.clear();
+      console.log('Session store cleared (startup)');
+    }
 
-  if (process.env.HTTPS_ENABLED === 'true') {
+    if (process.env.HTTPS_ENABLED === 'true') {
       const keyPath = process.env.HTTPS_KEY_PATH;
       const certPath = process.env.HTTPS_CERT_PATH;
 
