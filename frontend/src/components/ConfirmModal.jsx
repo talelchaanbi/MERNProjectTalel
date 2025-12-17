@@ -1,4 +1,5 @@
 import React, { useId } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, ShieldCheck, X } from 'lucide-react';
 
 export default function ConfirmModal({
@@ -17,7 +18,7 @@ export default function ConfirmModal({
   const titleId = useId();
   const messageId = useId();
 
-  return (
+  const modal = (
     <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={message ? messageId : undefined}>
       <div className={`modal-content card confirm-modal ${isDanger ? 'confirm-modal-danger' : ''}`}>
         <div className="modal-header">
@@ -37,9 +38,11 @@ export default function ConfirmModal({
           <p id={messageId} className="modal-message">{message}</p>
         </div>
         <div className="modal-actions">
-          <button onClick={onClose} className="btn-secondary" type="button">
-            {cancelText}
-          </button>
+          {cancelText ? (
+            <button onClick={onClose} className="btn-secondary" type="button">
+              {cancelText}
+            </button>
+          ) : null}
           <button
             onClick={() => {
               onConfirm();
@@ -54,4 +57,9 @@ export default function ConfirmModal({
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modal, document.body);
+  }
+  return modal;
 }

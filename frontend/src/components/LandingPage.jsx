@@ -2,6 +2,7 @@ import { CheckCircle, Github, BookOpen, Cloud, Shield, Users, Database, Server, 
 import talelPhoto from '../assets/talel.png';
 import { useState } from 'react';
 import ContactModal from './ContactModal';
+import ErrorBoundary from './ErrorBoundary';
 
 export default function LandingPage({ onGoToLogin }) {
   const [contactOpen, setContactOpen] = useState(false);
@@ -49,7 +50,15 @@ export default function LandingPage({ onGoToLogin }) {
             </div>
             <div className="project-actions">
               <button className="btn-primary" onClick={onGoToLogin}>Accéder à l'application</button>
-              <button className="btn-ghost btn-mail" onClick={() => setContactOpen(true)}><Mail size={14} /> Contact / Support</button>
+              <button
+                className="btn-ghost btn-mail"
+                onClick={() => {
+                  console.log('LandingPage: opening contact modal');
+                  setContactOpen(true);
+                }}
+              >
+                <Mail size={14} /> Contact / Support
+              </button>
               <a className="btn-ghost" href="https://github.com/talelchaanbi/MERNProject" target="_blank" rel="noopener noreferrer"><Github size={16} /> Voir sur GitHub</a>
             </div>
           </div>
@@ -97,7 +106,9 @@ export default function LandingPage({ onGoToLogin }) {
           </div>
         </div>
       </div>
-      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      <ErrorBoundary>
+        <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      </ErrorBoundary>
     </div>
   );
 }

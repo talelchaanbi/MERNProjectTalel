@@ -51,142 +51,91 @@ If you see `MongoDB connection failed: ETIMEOUT: queryTxt ...`, your network/DNS
 - First try: set `MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8`
 - If it still fails: set `MONGO_URI_DIRECT` to the Atlas **Standard connection string (mongodb://)**
 - Also check Atlas **Network Access** allows your current IP (or temporarily `0.0.0.0/0` for dev)
+# MERN Project — Démo (FR)
 
-## Optional: Self-signed HTTPS (development)
+Application de démonstration full‑stack (MERN) mettant en œuvre :
+- Authentification sécurisée (sessions côté serveur)
+- Gestion des rôles (ADMIN, RECRUT, CONSULTANT)
+- Uploads de profil, gestion des utilisateurs (admin)
+- Formulaire de contact/support (landing page) + table de messages consultable par l'admin
+- Déploiement prévu pour Azure + MongoDB Atlas
+
+Le README suivant explique l'installation locale, les variables d'environnement importantes et les points d'API principaux.
+
+## Fonctionnalités principales
+- Authentification (email + mot de passe) avec sessions stockées en MongoDB
+- Rôles utilisateurs et contrôle d'accès basé sur rôle
+- Upload d'avatar (multer) et utilisation de FormData côté client
+- **Formulaire de contact** sur la landing page ; messages persistés en base et consultables par les administrateurs (`/api/messages`)
+- Déploiement/serving du build React par Express en production
+
+## Prérequis
+- Node.js 18+
+- npm
+- MongoDB (Atlas ou local)
+
+## Installation & démarrage (dev)
+
+1. Installer les dépendances backend :
 
 ```bash
 cd backend
-mkdir -p certs
-openssl req -x509 -newkey rsa:2048 -nodes \
-  -keyout certs/server.key \
-  -out certs/server.crt \
-  -days 365 \
-  -subj "/CN=localhost"
+npm install
 ```
-Set `HTTPS_ENABLED=true` (and paths) in `.env`.
 
-## Run
+2. Installer les dépendances frontend :
 
 ```bash
-npm run dev
-```
-- HTTP: `http://localhost:4500`
-- HTTPS (if enabled): `https://localhost:4500`
-
-Server clears all sessions on startup. Cookies are `httpOnly`, `secure` in HTTPS mode, and expire based on `SESSION_MAX_AGE_HOURS`.
-
-## API Endpoints
-
-### POST `/api/auth/register`
-- Body: JSON or multipart form
-```json
-{
-  "username": "lea.dupont",
-  "email": "lea.dupont@example.com",
-  "password": "StrongPass!23",
-  "phone": "+21612345678",
-  "role": "CONSULTANT"
-}
-```
-- Optional: `profilePicture` file (form-data). If omitted, default avatar applies.
-
-### POST `/api/auth/login`
-- Body:
-```json
-{
-  "email": "lea.dupont@example.com",
-  "password": "StrongPass!23"
-}
-```
-- Response sets a session cookie (`sid`).
-
-### GET `/api/auth/me`
-- Requires session cookie. Returns current user data.
-
-### POST `/api/auth/logout`
-- Requires session. Destroys session and clears cookie.
-
-## Testing with Postman
-
-1. Login request; inspect the `sid` cookie in the cookie jar.
-2. Subsequent `GET /api/auth/me` uses the cookie automatically.
-3. `POST /api/auth/logout` clears the session.
-4. Restarting the server wipes the session store; re-login afterward.
-
-## Folder Structure
-
-```
-backend/
-  certs/             # HTTPS certificates (optional)
-  config/            # DB connection + role seed
-  controllers/       # Auth logic
-  middleware/        # Session auth
-  models/            # Mongoose models (User, Role)
-  routes/            # Express routes
-  uploads/           # Multer uploads
-  utils/             # Multer configuration
+cd frontend
+npm install
 ```
 
-## Future Improvements
+3. Variables d'environnement (ex. `backend/.env`) :
 
-- Add request validation (Joi/Zod)
-- Rate-limit login attempts
-- Add CSRF protection for cookie-based sessions
-- Implement refresh tokens or MFA if requirements grow
+```
+MONGO_URI=mongodb+srv://user:password@cluster0.mongodb.net/mernproject
+MONGO_DB_NAME=mernproject
+SESSION_SECRET=une_chaine_longue_et_secrete
+SESSION_MAX_AGE_HOURS=6
+HTTPS_ENABLED=false
+PORT=4500
+```
 
-## Deployment (Azure App Service + MongoDB Atlas)
+Si vous utilisez Atlas et rencontrez des erreurs DNS (TXT query timeout), essayez `MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8` ou fournissez `MONGO_URI_DIRECT` (connexion non-SRV).
 
-This repo is set up so Azure can deploy the whole repository as a single Node app:
-
-- Root `package.json` builds the React app (`frontend/`) and copies it into `backend/public/`.
-- `backend/server.js` serves the SPA in production (and still serves `/api/*` + `/uploads`).
-
-### 1) MongoDB Atlas
-
-- Create a cluster and database user.
-- Add Network Access:
-  - For a quick test: allow `0.0.0.0/0` (not recommended long-term)
-  - Better: allow your Azure App Service outbound IPs.
-
-### 2) Azure Web App
-
-- Create **Web App** (Linux) with **Node.js** runtime.
-- Deployment source: GitHub (recommended) or Local Git.
-
-### 3) App Service Configuration (Environment Variables)
-
-In **App Service → Configuration → Application settings**, set:
-
-- `NODE_ENV=production`
-- `MONGO_URI=...` (your Atlas connection string)
-- `MONGO_DB_NAME=mernproject`
-- `SESSION_SECRET=...` (long random string)
-- `SESSION_MAX_AGE_HOURS=6`
-- `HTTPS_ENABLED=false`
-- `CLEAR_SESSIONS_ON_STARTUP=false`
-
-Do not hardcode `PORT` on Azure; App Service injects it and the server uses `process.env.PORT`.
-
-### 4) Startup Command
-
-Set the startup command to:
+4. Lancer en local (chaque dossier dans un terminal) :
 
 ```bash
-npm start
+cd backend && npm run dev
+cd frontend && npm run dev
 ```
 
-### 5) What Azure Builds
+Le frontend est accessible en développement via Vite (habituellement http://localhost:5173) et le backend en http://localhost:4500.
 
-Azure will run the root scripts:
+## Endpoints importants
 
-- `postinstall`: installs `backend/` + `frontend/` dependencies
-- `build`: builds `frontend/` and copies output into `backend/public/`
-- `start`: runs the backend server
+- Auth : `/api/auth/*` (register, login, me, logout, users)
+- Messages (contact/support) :
+  - POST `/api/messages` — création d'un message (public)
+  - GET `/api/messages` — liste (ADMIN only)
+  - GET `/api/messages/:id` — détail (ADMIN only)
+  - PATCH `/api/messages/:id/read` — marquer lu (ADMIN only)
 
-### 6) Verify
+## Utilisation
 
-Open your App Service URL and verify:
+- Sur la landing page, un bouton **Contact / Support** ouvre un formulaire. Les messages envoyés sont stockés et visibles par un administrateur via l'interface "Messages".
+- Les administrateurs peuvent marquer les messages comme lus, exporter ou répondre en dehors de l'application (par email).
 
-- Frontend loads (served by Express)
-- API works under `/api/auth/*`
-- Uploads are reachable under `/uploads/*`
+## Déploiement (notes rapides)
+
+- Pousser la branche sur un service CI (Azure App Service recommandé).
+- Le script `build` du repo construit le frontend et copie le build dans `backend/public` pour que Express serve le SPA en production.
+
+## Tests & Debug
+- Aucune suite de tests intégrée pour l'instant. Pour tester rapidement :
+  1. Lancer backend et frontend
+  2. Utiliser le formulaire de contact (landing) et vérifier que le message apparaît dans **Messages** après connexion avec un compte ADMIN
+
+## Contribuer
+- Ouvrez une issue ou envoyez une PR pour corrections, améliorations UI/UX, tests ou ajout de fonctionnalités (notifications email, export CSV des messages, pagination).
+

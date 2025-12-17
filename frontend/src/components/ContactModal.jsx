@@ -1,14 +1,30 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Mail, Phone } from 'lucide-react';
 import { sendMessage } from '../api/messages';
 import ConfirmModal from './ConfirmModal';
 
 export default function ContactModal({ open, onClose }) {
+  useEffect(() => {
+    console.log('ContactModal: mount status=', open);
+    return () => console.log('ContactModal: unmount');
+  }, [open]);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', organization: '', message: '' });
   const [errors, setErrors] = useState(null);
   const [success, setSuccess] = useState(null);
   const [successPopup, setSuccessPopup] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Auto-close the confirmation popup after 3s and close the contact modal
+  useEffect(() => {
+    if (!successPopup) return undefined;
+    const t = setTimeout(() => {
+      setSuccessPopup(false);
+      setSuccess(null);
+      onClose(false);
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [successPopup, onClose]);
 
   if (!open) return null;
 
@@ -35,19 +51,10 @@ export default function ContactModal({ open, onClose }) {
   };
 
   // Auto-close the confirmation popup after 3s and close the contact modal
-  useEffect(() => {
-    if (!successPopup) return undefined;
-    const t = setTimeout(() => {
-      setSuccessPopup(false);
-      setSuccess(null);
-      onClose(false);
-    }, 3000);
-    return () => clearTimeout(t);
-  }, [successPopup, onClose]);
 
-  return (
-    <div className="modal-overlay" role="dialog" aria-modal="true">
-      <div className="modal-content card modal-compact">
+  const modal = (
+    <div className="modal-overlay debug-modal" role="dialog" aria-modal="true">
+      <div className="modal-content card modal-compact debug">
         <div className="modal-header">
           <h2>Contact / Support</h2>
           <button className="btn-icon-small" onClick={() => onClose(false)} aria-label="Fermer"><X size={18} /></button>
@@ -98,4 +105,9 @@ export default function ContactModal({ open, onClose }) {
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined' && document.body) {
+    return createPortal(modal, document.body);
+  }
+  return modal;
 }
