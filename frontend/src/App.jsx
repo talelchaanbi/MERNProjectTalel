@@ -75,7 +75,7 @@ function App() {
         )}
 
         {view === 'register' && user.role === 'ADMIN' && (
-          <RegisterUserForm />
+          <RegisterUserForm onCreated={() => setView('users')} />
         )}
       </main>
     </div>

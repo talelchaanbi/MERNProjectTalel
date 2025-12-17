@@ -80,8 +80,8 @@ exports.register = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        
         email: user.email,
+        phone: user.phone,
         role: foundRole.lib,
         profilePicture: user.profilePicture,
 
@@ -129,6 +129,7 @@ exports.login = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        phone: user.phone,
         role: user.role?.lib,
         profilePicture: user.profilePicture,
       },
@@ -153,6 +154,7 @@ exports.currentUser = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        phone: user.phone,
         role: user.role?.lib,
         profilePicture: user.profilePicture,
       },
@@ -197,7 +199,8 @@ exports.logout = async (req, res) => {
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().populate('role', 'lib').select('-password');
+    // Exclude the currently authenticated user (req.userId) so admins don't see themselves in the list
+    const users = await User.find({ _id: { $ne: req.userId } }).populate('role', 'lib').select('-password');
     const formattedUsers = users.map(u => ({
       ...u.toObject(),
       role: u.role?.lib || 'UNKNOWN'
@@ -212,13 +215,19 @@ exports.getAllUsers = async (req, res) => {
 // Update Profile (Self)
 exports.updateProfile = async (req, res) => {
   try {
-    const { username, phone } = req.body;
+    const { username } = req.body;
+    // Note: with multipart/form-data, fields may be empty strings; we explicitly read phone
+    // from req.body even if it is an empty string so it can clear the phone on update.
+    const phone = Object.prototype.hasOwnProperty.call(req.body, 'phone') ? req.body.phone : undefined;
     const user = await User.findById(req.userId).populate('role');
 
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
-    if (username) user.username = username;
-    if (phone) user.phone = phone;
+    // Always update username/phone when provided in the request. This allows clearing values
+    // by sending an empty string for the field.
+    if (typeof username !== 'undefined') user.username = username;
+    if (typeof phone !== 'undefined') user.phone = phone;
+    console.debug(`updateProfile: received phone='${phone}' for user ${req.userId}`);
     
     if (req.file) {
       user.profilePicture = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;

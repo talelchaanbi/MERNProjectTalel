@@ -18,7 +18,7 @@ const INITIAL_FORM = {
   profilePicture: null,
 };
 
-export default function RegisterUserForm() {
+export default function RegisterUserForm({ onCreated }) {
   const dispatch = useDispatch();
   const { registerStatus } = useSelector((state) => state.auth);
   const [form, setForm] = useState(() => ({ ...INITIAL_FORM }));
@@ -73,6 +73,10 @@ export default function RegisterUserForm() {
       const user = await dispatch(registerUser(payload)).unwrap();
       setSuccess(`Utilisateur ${user.username} créé avec succès.`);
       setForm({ ...INITIAL_FORM });
+      // If parent provided a callback, navigate back to users list
+      if (typeof onCreated === 'function') {
+        onCreated();
+      }
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
