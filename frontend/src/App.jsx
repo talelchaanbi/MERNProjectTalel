@@ -7,12 +7,14 @@ import LoginForm from './components/LoginForm';
 import RegisterUserForm from './components/RegisterUserForm';
 import Navbar from './components/Navbar';
 import UserList from './components/UserList';
+import LandingPage from './components/LandingPage';
 
 function App() {
   const dispatch = useDispatch();
   const { user, status } = useSelector((state) => state.auth);
   const isAuthenticated = Boolean(user);
   const [view, setView] = useState('dashboard');
+  const [unauthView, setUnauthView] = useState('home');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
@@ -21,6 +23,8 @@ function App() {
 
   const handleLogout = () => {
     dispatch(logoutUser());
+    setView('dashboard');
+    setUnauthView('home');
   };
 
   if (isInitialLoad) {
@@ -34,11 +38,17 @@ function App() {
   if (!isAuthenticated) {
     return (
       <div className="app">
-        <header className="app-header">
-          <h1>MERN Auth</h1>
-        </header>
+        {unauthView === 'home' && (
+          <header className="app-header">
+            <h1>MERN Project</h1>
+          </header>
+        )}
         <main className="app-main">
-          <LoginForm />
+          {unauthView === 'home' ? (
+            <LandingPage onGoToLogin={() => setUnauthView('login')} />
+          ) : (
+            <LoginForm onBackToHome={() => setUnauthView('home')} />
+          )}
         </main>
       </div>
     );

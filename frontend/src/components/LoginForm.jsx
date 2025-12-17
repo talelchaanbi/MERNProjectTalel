@@ -8,7 +8,7 @@ const INITIAL_FORM = {
   password: '',
 };
 
-export default function LoginForm() {
+export default function LoginForm({ onBackToHome }) {
   const dispatch = useDispatch();
   const { status } = useSelector((state) => state.auth);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -42,6 +42,30 @@ export default function LoginForm() {
     <div className="login-wrapper">
       <div className="login-card-creative">
         <div className="login-header">
+          {typeof onBackToHome === 'function' && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '0.75rem' }}>
+              <button 
+                type="button" 
+                onClick={onBackToHome}
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: '#94a3b8', 
+                  cursor: 'pointer', 
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: 0,
+                  transition: 'color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.color = '#e2e8f0'}
+                onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                ← Retour à l’accueil
+              </button>
+            </div>
+          )}
           <div className="logo-container">
             <div className="logo-hexagon">
               <Hexagon size={40} strokeWidth={1.5} />
@@ -111,10 +135,6 @@ export default function LoginForm() {
             {!status === 'loading' && <ArrowRight size={20} />}
           </button>
         </form>
-        
-        <div className="login-footer">
-          <p>MERN Project v1.0</p>
-        </div>
       </div>
     </div>
   );
