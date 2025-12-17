@@ -18,6 +18,9 @@ const validateMessage = (req) => {
   const messageText = sanitize(body.message);
   if (!messageText) errors.push({ field: 'message', message: 'Le message est requis.' });
 
+  const priority = sanitize(body.priority || 'normal').toLowerCase();
+  if (!['normal', 'urgent'].includes(priority)) errors.push({ field: 'priority', message: 'Priority invalide.' });
+
   if (errors.length) throw new RequestValidationError(errors);
 
   req.body.firstName = firstName;
@@ -26,13 +29,21 @@ const validateMessage = (req) => {
   req.body.phone = sanitize(body.phone || '');
   req.body.organization = sanitize(body.organization || '');
   req.body.message = messageText;
+  req.body.priority = priority;
 };
 
 const createMessage = async (req, res) => {
   validateMessage(req);
   const { firstName, lastName, email, phone, organization, message } = req.body;
-  const doc = await Message.create({ firstName, lastName, email, phone, organization, message });
+  const { priority } = req.body;
+  const doc = await Message.create({ firstName, lastName, email, phone, organization, message, priority });
   res.status(201).json({ msg: 'Message envoyé', id: doc._id });
+};
+
+const getCounts = async (req, res) => {
+  const total = await Message.countDocuments();
+  const urgent = await Message.countDocuments({ priority: 'urgent' });
+  res.json({ total, urgent });
 };
 
 const getMessages = async (req, res) => {

@@ -7,6 +7,7 @@ const MessageSchema = new mongoose.Schema({
   phone: { type: String, required: false },
   organization: { type: String, required: false },
   message: { type: String, required: true },
+  priority: { type: String, enum: ['normal', 'urgent'], default: 'normal' },
   read: { type: Boolean, default: false },
 }, { timestamps: true });
 

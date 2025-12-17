@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Mail, Phone } from 'lucide-react';
+import { X, Mail, Phone, CheckCircle } from 'lucide-react';
 import { sendMessage } from '../api/messages';
 import ConfirmModal from './ConfirmModal';
 
@@ -13,6 +13,7 @@ export default function ContactModal({ open, onClose }) {
   const [errors, setErrors] = useState(null);
   const [success, setSuccess] = useState(null);
   const [successPopup, setSuccessPopup] = useState(false);
+  const [priority, setPriority] = useState('normal');
   const [loading, setLoading] = useState(false);
 
   // Auto-close the confirmation popup after 3s and close the contact modal
@@ -55,8 +56,14 @@ export default function ContactModal({ open, onClose }) {
   const modal = (
     <div className="modal-overlay debug-modal" role="dialog" aria-modal="true">
       <div className="modal-content card modal-compact debug">
-        <div className="modal-header">
-          <h2>Contact / Support</h2>
+        <div className="modal-header contact-header">
+          <div className="modal-title-group">
+            <div className="modal-icon-badge primary"><Mail size={20} /></div>
+            <div>
+              <h2>Contact / Support</h2>
+              <div className="modal-sub">Posez votre question — l'administrateur vous répondra rapidement.</div>
+            </div>
+          </div>
           <button className="btn-icon-small" onClick={() => onClose(false)} aria-label="Fermer"><X size={18} /></button>
         </div>
         <form className="form modal-body" onSubmit={handleSubmit}>
@@ -79,13 +86,24 @@ export default function ContactModal({ open, onClose }) {
               Téléphone
               <input name="phone" value={form.phone} onChange={handleChange} />
             </label>
+            <label className="form-label">
+              Priorité
+              <select name="priority" value={priority} onChange={(e) => setPriority(e.target.value)}>
+                <option value="normal">Normale</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </label>
             <label className="form-label span-2">
               Organisation
               <input name="organization" value={form.organization} onChange={handleChange} />
             </label>
-            <label className="form-label span-2">
+            <label className="form-label span-2 message-field">
               Message
-              <textarea name="message" rows={4} value={form.message} onChange={handleChange} required />
+              <textarea name="message" rows={6} maxLength={1000} value={form.message} onChange={handleChange} required />
+              <div className="textarea-meta">
+                <span className="char-count">{form.message.length}/1000</span>
+                <small className="hint">Soyez précis et concis — décrivez le problème et le résultat attendu.</small>
+              </div>
             </label>
           </div>
           <div className="modal-actions modal-fixed-actions">
@@ -93,15 +111,13 @@ export default function ContactModal({ open, onClose }) {
             <button type="button" className="btn-secondary" onClick={() => onClose(false)}>Annuler</button>
           </div>
         </form>
-        <ConfirmModal
-          isOpen={successPopup}
-          title="Message envoyé"
-          message={success}
-          onClose={() => { setSuccessPopup(false); setSuccess(null); onClose(false); }}
-          onConfirm={() => { setSuccessPopup(false); setSuccess(null); onClose(false); }}
-          confirmText="Fermer"
-          cancelText=""
-        />
+        <div className={`success-banner ${successPopup ? 'show' : ''}`} role="status" aria-live="polite">
+          <div className="success-icon"><CheckCircle size={20} /></div>
+          <div>
+            <strong>{success || 'Message envoyé'}</strong>
+            <div className="small">Merci — nous vous répondrons bientôt.</div>
+          </div>
+        </div>
       </div>
     </div>
   );

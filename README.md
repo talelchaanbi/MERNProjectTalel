@@ -139,3 +139,33 @@ Le frontend est accessible en développement via Vite (habituellement http://loc
 ## Contribuer
 - Ouvrez une issue ou envoyez une PR pour corrections, améliorations UI/UX, tests ou ajout de fonctionnalités (notifications email, export CSV des messages, pagination).
 
+## Demander l'accès (repo privé)
+
+Si le dépôt est privé, vous pouvez demander l'accès au propriétaire en utilisant la procédure suivante :
+
+- **Bouton 'Demander l'accès'** sur la landing page (ouvre votre client mail avec un message prérempli).
+- **Email manuel** : utilisez l'objet et le corps recommandés ci-dessous si vous écrivez depuis votre client mail.
+
+Objet recommandé :
+
+```
+Demande d'accès - MERN Project
+```
+
+Corps recommandé :
+
+```
+Bonjour,
+
+Je souhaite accéder au dépôt "MERN Project".
+Voici mes informations :
+- Nom :
+- Organisation :
+- Raison :
+
+Merci,
+[Votre nom]
+```
+
+Si vous voulez, je peux aussi ajouter une confirmation (modal) avant d'ouvrir le client mail, ou stocker les demandes côté backend pour un suivi centralisé (nécessite un nouvel endpoint).
+

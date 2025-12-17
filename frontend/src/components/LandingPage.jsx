@@ -59,6 +59,13 @@ export default function LandingPage({ onGoToLogin }) {
               >
                 <Mail size={14} /> Contact / Support
               </button>
+              <a
+                className="btn-ghost"
+                href="mailto:?subject=Demande%20d%27acc%C3%A8s%20-%20MERN%20Project&body=Bonjour%2C%0A%0AJe%20souhaite%20acc%C3%A9der%20au%20d%C3%A9p%C3%B4t%20%22MERN%20Project%22.%20Voici%20mes%20informations%20%3A%0A-%20Nom%20%3A%0A-%20Organisation%20%3A%0A-%20Raison%20%3A%0A%0AMerci%2C%0A%5BVotre%20nom%5D"
+                aria-label="Demander l'accès au dépôt"
+              >
+                <Mail size={14} /> Demander l'accès
+              </a>
               <a className="btn-ghost" href="https://github.com/talelchaanbi/MERNProject" target="_blank" rel="noopener noreferrer"><Github size={16} /> Voir sur GitHub</a>
             </div>
           </div>
