@@ -42,13 +42,17 @@ const createMessage = async (req, res) => {
 
 const getCounts = async (req, res) => {
   const total = await Message.countDocuments();
-  const urgent = await Message.countDocuments({ priority: 'urgent' });
-  res.json({ total, urgent });
+  // be case-insensitive and tolerant if older docs have different casing
+  const urgent = await Message.countDocuments({ priority: { $regex: /^urgent$/i } });
+  const unread = await Message.countDocuments({ read: false });
+  res.json({ total, urgent, unread });
 };
 
 const getMessages = async (req, res) => {
   const messages = await Message.find().sort({ createdAt: -1 }).lean();
-  res.json(messages);
+  // normalize priority for consistency (ensure lowercase or default 'normal')
+  const normalized = messages.map((m) => ({ ...m, priority: (m.priority || 'normal').toString().toLowerCase() }));
+  res.json(normalized);
 };
 
 const getMessage = async (req, res) => {
@@ -72,4 +76,5 @@ module.exports = {
   getMessages,
   getMessage,
   markRead,
+  getCounts,
 };

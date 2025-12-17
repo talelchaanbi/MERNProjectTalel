@@ -10,6 +10,11 @@ export const fetchMessages = async () => {
   return res.data;
 };
 
+export const fetchMessageCounts = async () => {
+  const res = await client.get('/messages/counts');
+  return res.data;
+};
+
 export const markMessageRead = async (id) => {
   const res = await client.patch(`/messages/${id}/read`);
   return res.data;

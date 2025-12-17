@@ -39,11 +39,14 @@ export default function ContactModal({ open, onClose }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await sendMessage(form);
+      await sendMessage({ ...form, priority });
       const msg = 'Message envoyé. Merci, nous vous contacterons bientôt.';
       setSuccess(msg);
       setSuccessPopup(true);
       setForm({ firstName: '', lastName: '', email: '', phone: '', organization: '', message: '' });
+      setPriority('normal');
+      // notify other parts of app (e.g., navbar) that messages changed
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('messages:updated'));
     } catch (err) {
       setErrors(err?.message || 'Erreur lors de l\'envoi');
     } finally {

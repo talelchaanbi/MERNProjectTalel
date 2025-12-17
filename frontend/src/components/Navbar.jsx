@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, Github, User, LogOut, MoreVertical } from 'lucide-react';
+import { fetchMessageCounts } from '../api/messages';
 
 export default function Navbar({ user, logout, setView, currentView }) {
   // Prefer showing the user's last name (nom) as a friendly greeting.
@@ -33,7 +34,10 @@ export default function Navbar({ user, logout, setView, currentView }) {
   // dropdown menu state
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [counts, setCounts] = useState({ total: 0, urgent: 0, unread: 0 });
+  const [avatarBroken, setAvatarBroken] = useState(false);
   const menuRef = useRef(null);
+  const countsRef = useRef(null);
   useEffect(() => {
     function onDocClick(e) {
       if (!menuRef.current) return;
@@ -44,6 +48,42 @@ export default function Navbar({ user, logout, setView, currentView }) {
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
   }, []);
+
+  // fetch counts for admins and poll
+  useEffect(() => {
+    let mounted = true;
+    let timer = null;
+    const loadCounts = async () => {
+      try {
+        const c = await fetchMessageCounts();
+        if (!mounted) return;
+        setCounts(c || { total: 0, urgent: 0, unread: 0 });
+      } catch (e) {
+        // ignore
+      }
+    };
+    if (user && user.role === 'ADMIN') {
+      loadCounts();
+      timer = setInterval(loadCounts, 20000);
+    }
+    // listen for immediate updates triggered elsewhere
+    function onUpdated(e) {
+      if (e?.detail) setCounts(e.detail);
+      else loadCounts();
+    }
+    function onMessageRead(e) {
+      // decrement unread immediately when an individual message is marked read
+      setCounts((c) => ({ ...c, unread: Math.max(0, (c.unread || 0) - 1) }));
+    }
+    window.addEventListener('messages:updated', onUpdated);
+    window.addEventListener('message:read', onMessageRead);
+    return () => {
+      mounted = false;
+      if (timer) clearInterval(timer);
+      window.removeEventListener('messages:updated', onUpdated);
+      window.removeEventListener('message:read', onMessageRead);
+    };
+  }, [user]);
 
   return (
     <nav className="navbar creative">
@@ -63,7 +103,7 @@ export default function Navbar({ user, logout, setView, currentView }) {
         >
           Tableau de bord
         </button>
-        {user.role === 'ADMIN' && (
+        {user && user.role === 'ADMIN' && (
           <>
             <button 
               className={`nav-item ${currentView === 'users' ? 'active' : ''}`}
@@ -74,8 +114,18 @@ export default function Navbar({ user, logout, setView, currentView }) {
             <button
               className={`nav-item ${currentView === 'messages' ? 'active' : ''}`}
               onClick={() => setView('messages')}
+              aria-label={`Messages, ${counts.unread || 0} non lus`}
             >
-              Messages
+              Messages {counts.unread > 0 && (
+                <span
+                  className="nav-badge"
+                  title={`${counts.unread} message(s) en attente`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {counts.unread > 9 ? '9+' : counts.unread}
+                </span>
+              )}
             </button>
             <button 
               className={`nav-item ${currentView === 'register' ? 'active' : ''}`}
@@ -90,7 +140,7 @@ export default function Navbar({ user, logout, setView, currentView }) {
       <div className="navbar-end creative-end">
         <div className="welcome-block">
           <span className="welcome">Bonjour {getDisplayName()}</span>
-          <span className="welcome-sub">{user.role}</span>
+          <span className="welcome-sub">{user?.role}</span>
         </div>
 
         <div className="navbar-actions">
@@ -104,8 +154,8 @@ export default function Navbar({ user, logout, setView, currentView }) {
 
           <div className="user-menu" ref={menuRef}>
             <button className="icon-btn avatar-btn" onClick={() => setMenuOpen((s) => !s)} title="Menu">
-              {user.profilePicture ? (
-                <img src={user.profilePicture} alt={user.username} className="avatar-in-menu" />
+              {user.profilePicture && !avatarBroken ? (
+                <img src={user.profilePicture} alt={user.username} className="avatar-in-menu" onError={() => setAvatarBroken(true)} onLoad={() => setAvatarBroken(false)} />
               ) : (
                 <div className="avatar-initials">{(user.username || user.email || '?').toString().trim().split(/\s+/).slice(-1)[0]?.[0]?.toUpperCase()}</div>
               )}

@@ -536,6 +536,31 @@ body.dark { background-color: #071023; color: #e6eef6; }
   gap: 1.5rem;
 }
 
+.nav-item { position: relative }
+.nav-badge {
+  background: #ef4444;
+  color: white;
+  font-weight: 700;
+  font-size: 0.72rem;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(239,68,68,0.14);
+}
+
+@media (max-width: 640px) {
+  .nav-badge { top: -6px; right: -6px; min-width: 18px; height: 18px; font-size: 0.7rem }
+}
+
+/* remove urgent-chip (we place badge under Messages item instead) */
+
 .logout-btn {
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
@@ -2394,6 +2419,9 @@ body.dark { background-color: #071023; color: #e6eef6; }
 .message-meta { display:flex; gap:0.6rem; align-items:center; color:var(--text-secondary); font-size:0.9rem }
 .message-body { margin:0.6rem 0 0 }
 .message-actions { margin-top:0.6rem; display:flex; gap:0.6rem }
+
+.message-item.urgent { border-left: 4px solid #ef4444; box-shadow: 0 6px 18px rgba(239,68,68,0.06); }
+.priority-badge { background: #ef4444; color: white; padding: 0.18rem 0.5rem; border-radius: 6px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em }
 
 .feature-icon {
   color: var(--primary-color);
