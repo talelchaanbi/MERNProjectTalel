@@ -32,6 +32,7 @@ export default function Navbar({ user, logout, setView, currentView }) {
 
   // dropdown menu state
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef(null);
   useEffect(() => {
     function onDocClick(e) {
@@ -46,12 +47,16 @@ export default function Navbar({ user, logout, setView, currentView }) {
 
   return (
     <nav className="navbar creative">
-      <div className="navbar-left" onClick={() => setView('dashboard')}>
-        <div className="brand-logo">MERN<span className="brand-dot">•</span></div>
-        <div className="brand-sub">Authentication & Roles</div>
+      <div className="navbar-left" onClick={() => setView('dashboard')} role="button" tabIndex={0}>
+        <div className="brand-logo">Talel Chaanbi<span className="brand-dot">•</span></div>
+        <div className="brand-sub">MERN · Auth & Roles</div>
       </div>
 
-      <div className="navbar-menu">
+      <button className="hamburger" aria-label="Ouvrir le menu mobile" onClick={() => setMobileOpen(s => !s)}>
+        <MoreVertical size={18} />
+      </button>
+
+      <div className={`navbar-menu ${mobileOpen ? 'open' : ''}`}>
         <button 
           className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
           onClick={() => setView('dashboard')}
@@ -100,11 +105,11 @@ export default function Navbar({ user, logout, setView, currentView }) {
               )}
             </button>
             {menuOpen && (
-              <div className="menu-dropdown">
-                <button className="menu-item" onClick={() => { setMenuOpen(false); setView('dashboard'); }}>
+              <div className="menu-dropdown" role="menu" aria-label="Menu utilisateur">
+                <button className="menu-item" role="menuitem" onClick={() => { setMenuOpen(false); setView('dashboard'); }}>
                   <User size={16} /> Mon profil
                 </button>
-                <button className="menu-item" onClick={() => { setMenuOpen(false); logout(); }}>
+                <button className="menu-item" role="menuitem" onClick={() => { setMenuOpen(false); logout(); }}>
                   <LogOut size={16} /> Se déconnecter
                 </button>
               </div>
@@ -115,3 +120,4 @@ export default function Navbar({ user, logout, setView, currentView }) {
     </nav>
   );
 }
+

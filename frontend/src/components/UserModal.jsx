@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updateUserByAdmin } from '../store/authSlice';
 import { X, Save, User, Mail, Phone, Shield, Camera, Edit2, Power, Wifi, WifiOff, AlertTriangle } from 'lucide-react';
 
@@ -20,6 +20,8 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
     role: user?.role || 'RECRUT',
     profilePicture: null
   });
+  const [passwords, setPasswords] = useState({ password: '', confirmPassword: '' });
+  const { user: currentUser } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (user) {
@@ -37,6 +39,15 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
     setIsEditing(mode === 'edit');
   }, [mode]);
 
+  // Close modal on ESC key for better ergonomics
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'profilePicture') {
@@ -46,6 +57,12 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
     }
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswords(prev => ({ ...prev, [name]: value }));
+    setErrors((prev) => prev.filter((m) => m !== 'Les mots de passe ne correspondent pas.'));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -53,11 +70,28 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
     formData.append('email', form.email);
     formData.append('phone', form.phone);
     formData.append('role', form.role);
+    // Admin can set a new password for the user
+    if (passwords.password) {
+      if (passwords.password !== passwords.confirmPassword) {
+        setErrors(['Les mots de passe ne correspondent pas.']);
+        return;
+      }
+      // If admin edits their own account, require current password to be provided
+      if (currentUser && currentUser.id === user._id) {
+        if (!passwords.currentPassword) {
+          setErrors(['Le mot de passe actuel est requis pour changer votre mot de passe.']);
+          return;
+        }
+        formData.append('currentPassword', passwords.currentPassword);
+      }
+      formData.append('password', passwords.password);
+    }
     if (form.profilePicture) {
       formData.append('profilePicture', form.profilePicture);
     }
     try {
       await dispatch(updateUserByAdmin({ id: user._id, formData })).unwrap();
+      setPasswords({ password: '', confirmPassword: '', currentPassword: '' });
       onClose(true); // true indicates success/refresh needed
     } catch (errPayload) {
       if (Array.isArray(errPayload)) {
@@ -85,8 +119,8 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
   const onlineIcon = user.isOnline ? <Wifi size={14} /> : <WifiOff size={14} />;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content card modal-full-layout">
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
+      <div className="modal-content card modal-compact" role="document">
         <div className="modal-header user-modal-header">
           <div className="user-modal-meta">
             <div className="user-modal-avatar">
@@ -98,7 +132,7 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
             </div>
             <div className="user-modal-heading">
               <p className="modal-kicker">{kickerLabel}</p>
-              <h2>{titleText}</h2>
+              <h2 id="user-modal-title">{titleText}</h2>
               <div className="user-modal-subtitle">
                 <Mail size={14} />
                 <span>{emailSubtitle}</span>
@@ -120,6 +154,7 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
             <X size={24} />
           </button>
         </div>
+        {/* Close on Escape for better ergonomics */}
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="form modal-body modal-form">
@@ -174,6 +209,34 @@ export default function UserModal({ user, onClose, mode = 'view' }) {
                       <div className="label-with-icon"><Camera size={16} /> Photo de profil</div>
                       <input type="file" name="profilePicture" onChange={handleChange} accept="image/*" />
                     </label>
+                  </div>
+                </section>
+
+                <section className="form-section">
+                  <div className="form-section-header">
+                    <h3>Sécurité</h3>
+                    <p>Changer le mot de passe (optionnel). Si vous modifiez votre propre mot de passe, vous devrez fournir le mot de passe actuel.</p>
+                  </div>
+                  <div className="form-grid">
+                    <label className="form-label">
+                      <div className="label-with-icon"><Edit2 size={16} /> Nouveau mot de passe</div>
+                      <input type="password" name="password" value={passwords.password} onChange={handlePasswordChange} placeholder="Laisser vide pour ne pas changer" />
+                    </label>
+
+                    <label className="form-label">
+                      <div className="label-with-icon"><Edit2 size={16} /> Confirmer le mot de passe</div>
+                      <input type="password" name="confirmPassword" value={passwords.confirmPassword} onChange={handlePasswordChange} placeholder="Confirmez le nouveau mot de passe" />
+                      {passwords.confirmPassword && passwords.password !== passwords.confirmPassword && (
+                        <div className="field-error">Les mots de passe ne correspondent pas.</div>
+                      )}
+                    </label>
+
+                    {currentUser && currentUser.id === user._id && (
+                      <label className="form-label">
+                        <div className="label-with-icon"><Edit2 size={16} /> Mot de passe actuel</div>
+                        <input type="password" name="currentPassword" value={passwords.currentPassword || ''} onChange={handlePasswordChange} placeholder="Mot de passe actuel" />
+                      </label>
+                    )}
                   </div>
                 </section>
               </div>

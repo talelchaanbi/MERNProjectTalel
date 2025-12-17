@@ -219,6 +219,8 @@ exports.updateProfile = async (req, res) => {
     // Note: with multipart/form-data, fields may be empty strings; we explicitly read phone
     // from req.body even if it is an empty string so it can clear the phone on update.
     const phone = Object.prototype.hasOwnProperty.call(req.body, 'phone') ? req.body.phone : undefined;
+    const currentPassword = Object.prototype.hasOwnProperty.call(req.body, 'currentPassword') ? req.body.currentPassword : undefined;
+    const newPassword = Object.prototype.hasOwnProperty.call(req.body, 'newPassword') ? req.body.newPassword : undefined;
     const user = await User.findById(req.userId).populate('role');
 
     if (!user) return res.status(404).json({ msg: 'User not found' });
@@ -228,9 +230,39 @@ exports.updateProfile = async (req, res) => {
     if (typeof username !== 'undefined') user.username = username;
     if (typeof phone !== 'undefined') user.phone = phone;
     console.debug(`updateProfile: received phone='${phone}' for user ${req.userId}`);
+
+    // Handle password change for the current user: require currentPassword to change password
+    if (typeof newPassword !== 'undefined') {
+      if (!currentPassword) {
+        return res.status(400).json({ msg: 'Current password is required to change your password' });
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ msg: 'Current password is incorrect' });
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
     
     if (req.file) {
       user.profilePicture = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    // Admin can set a new password for the user without providing the old password
+    if (typeof req.body.password !== 'undefined' && req.body.password) {
+      // If admin is updating their own account via this endpoint, require currentPassword
+      if (req.params.id.toString() === req.userId.toString()) {
+        const currentPassword = req.body.currentPassword;
+        if (!currentPassword) {
+          return res.status(400).json({ msg: 'Current password is required to change your password' });
+        }
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+          return res.status(400).json({ msg: 'Current password is incorrect' });
+        }
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
     }
 
     await user.save();

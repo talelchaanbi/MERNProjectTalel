@@ -12,6 +12,7 @@ export default function CurrentUserCard({ user }) {
     phone: user?.phone || '',
     profilePicture: null
   });
+  const [passwordFields, setPasswordFields] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
 
   if (!user) return null;
 
@@ -33,6 +34,12 @@ export default function CurrentUserCard({ user }) {
     }
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordFields(prev => ({ ...prev, [name]: value }));
+    setErrors((prev) => prev.filter((m) => m !== 'Les mots de passe ne correspondent pas.'));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -41,10 +48,24 @@ export default function CurrentUserCard({ user }) {
     if (form.profilePicture) {
       formData.append('profilePicture', form.profilePicture);
     }
+    // If user wants to change password, validate client-side and include current/new password
+    if (passwordFields.newPassword || passwordFields.confirmNewPassword || passwordFields.currentPassword) {
+      if (!passwordFields.currentPassword) {
+        setErrors(['Le mot de passe actuel est requis pour changer le mot de passe.']);
+        return;
+      }
+      if (passwordFields.newPassword !== passwordFields.confirmNewPassword) {
+        setErrors(['Les mots de passe ne correspondent pas.']);
+        return;
+      }
+      formData.append('currentPassword', passwordFields.currentPassword);
+      formData.append('newPassword', passwordFields.newPassword);
+    }
     try {
       await dispatch(updateProfile(formData)).unwrap();
       setIsEditing(false);
       setErrors([]);
+      setPasswordFields({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
     } catch (errPayload) {
       if (Array.isArray(errPayload)) {
         setErrors(errPayload.map((item) => item.msg || item.message || 'Erreur de validation'));
@@ -91,6 +112,36 @@ export default function CurrentUserCard({ user }) {
               value={form.phone} 
               onChange={handleChange} 
             />
+          </label>
+          <label className="form-label">
+            Mot de passe actuel
+            <input
+              type="password"
+              name="currentPassword"
+              value={passwordFields.currentPassword}
+              onChange={handlePasswordChange}
+            />
+          </label>
+          <label className="form-label">
+            Nouveau mot de passe
+            <input
+              type="password"
+              name="newPassword"
+              value={passwordFields.newPassword}
+              onChange={handlePasswordChange}
+            />
+          </label>
+          <label className="form-label">
+            Confirmer le nouveau mot de passe
+            <input
+              type="password"
+              name="confirmNewPassword"
+              value={passwordFields.confirmNewPassword}
+              onChange={handlePasswordChange}
+            />
+            {passwordFields.confirmNewPassword && passwordFields.newPassword !== passwordFields.confirmNewPassword && (
+              <div className="field-error">Les mots de passe ne correspondent pas.</div>
+            )}
           </label>
           <label className="form-label">
             Photo de profil

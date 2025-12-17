@@ -1,19 +1,16 @@
+import React from 'react';
 import { Github } from 'lucide-react';
 
 export default function Footer() {
-  const year = new Date().getFullYear();
   return (
     <footer className="app-footer">
       <div className="footer-left">
-        <strong>MERN Project</strong>
-        <span className="footer-sub">Authentication & Roles</span>
+        <div className="brand">MERN Project <span className="brand-dot">•</span></div>
+        <div className="footer-sub">Talel Chaanbi — MERN Full‑Stack</div>
       </div>
-      <div className="footer-center">© {year} Talel Chaanbi</div>
+      <div className="footer-center">&copy; {new Date().getFullYear()} — Demo project</div>
       <div className="footer-right">
-        <a href="https://github.com/talelchaanbi/MERNProject" target="_blank" rel="noreferrer" className="footer-link">
-          <Github size={16} />
-          <span>Repo</span>
-        </a>
+        <a className="footer-link" href="https://github.com/talelchaanbi/MERNProject" target="_blank" rel="noopener noreferrer"><Github size={16} /> Source</a>
       </div>
     </footer>
   );
