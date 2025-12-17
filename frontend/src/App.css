@@ -81,6 +81,11 @@
 .project-name { margin:0.6rem 0 0; font-size:1.05rem }
 .project-excerpt { margin:0.5rem 0; color:var(--text-secondary); font-size:0.95rem }
 .project-stats { display:flex; gap:1rem; margin-top:0.7rem; justify-content:space-between }
+
+.project-actions { display:flex; gap:0.6rem; align-items:center }
+.btn-mail { display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 0.9rem; border-radius:999px; border:1px solid rgba(255,255,255,0.06); background:transparent }
+.btn-mail svg { opacity:0.9 }
+.btn-mail:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -16px rgba(2,6,23,0.2) }
 .chip { padding:0.28rem 0.6rem; border-radius:999px; font-size:0.75rem; display:inline-flex; gap:0.5rem; align-items:center }
 .chip-success { background:#22c55e22; border:1px solid rgba(34,197,94,0.12); color:#86efac }
 .chip-accent { background: rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.08); color:var(--primary-color) }
@@ -2300,6 +2305,15 @@ body.dark { background-color: #071023; color: #e6eef6; }
   transform: translateY(-4px);
   background: rgba(15, 23, 42, 0.6);
 }
+
+/* Messages list */
+.messages-list { display:flex; flex-direction:column; gap:0.9rem; margin-top:1rem }
+.message-item { border-radius:10px; padding:0.9rem; border:1px solid rgba(148,163,184,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02)); }
+.message-item.read { opacity:0.7 }
+.message-head { display:flex; justify-content:space-between; gap:1rem; align-items:center }
+.message-meta { display:flex; gap:0.6rem; align-items:center; color:var(--text-secondary); font-size:0.9rem }
+.message-body { margin:0.6rem 0 0 }
+.message-actions { margin-top:0.6rem; display:flex; gap:0.6rem }
 
 .feature-icon {
   color: var(--primary-color);

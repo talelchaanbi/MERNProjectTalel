@@ -1,0 +1,77 @@
+import { useState } from 'react';
+import { X, Mail, Phone } from 'lucide-react';
+import { sendMessage } from '../api/messages';
+
+export default function ContactModal({ open, onClose }) {
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', organization: '', message: '' });
+  const [errors, setErrors] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!open) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+    setErrors(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await sendMessage(form);
+      setSuccess('Message envoyé. Merci, nous vous contacterons bientôt.');
+      setForm({ firstName: '', lastName: '', email: '', phone: '', organization: '', message: '' });
+    } catch (err) {
+      setErrors(err?.message || 'Erreur lors de l\'envoi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true">
+      <div className="modal-content card modal-compact">
+        <div className="modal-header">
+          <h2>Contact / Support</h2>
+          <button className="btn-icon-small" onClick={() => onClose(false)} aria-label="Fermer"><X size={18} /></button>
+        </div>
+        <form className="form modal-body" onSubmit={handleSubmit}>
+          {errors && <div className="error-message">{errors}</div>}
+          {success && <div className="success-message">{success}</div>}
+          <div className="form-grid">
+            <label className="form-label">
+              Prénom
+              <input name="firstName" value={form.firstName} onChange={handleChange} required />
+            </label>
+            <label className="form-label">
+              Nom
+              <input name="lastName" value={form.lastName} onChange={handleChange} />
+            </label>
+            <label className="form-label">
+              Email
+              <input name="email" type="email" value={form.email} onChange={handleChange} required />
+            </label>
+            <label className="form-label">
+              Téléphone
+              <input name="phone" value={form.phone} onChange={handleChange} />
+            </label>
+            <label className="form-label span-2">
+              Organisation
+              <input name="organization" value={form.organization} onChange={handleChange} />
+            </label>
+            <label className="form-label span-2">
+              Message
+              <textarea name="message" rows={4} value={form.message} onChange={handleChange} required />
+            </label>
+          </div>
+          <div className="modal-actions modal-fixed-actions">
+            <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Envoi…' : 'Envoyer'}</button>
+            <button type="button" className="btn-secondary" onClick={() => onClose(false)}>Annuler</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

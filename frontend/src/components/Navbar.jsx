@@ -71,6 +71,12 @@ export default function Navbar({ user, logout, setView, currentView }) {
             >
               Utilisateurs
             </button>
+            <button
+              className={`nav-item ${currentView === 'messages' ? 'active' : ''}`}
+              onClick={() => setView('messages')}
+            >
+              Messages
+            </button>
             <button 
               className={`nav-item ${currentView === 'register' ? 'active' : ''}`}
               onClick={() => setView('register')}

@@ -1,7 +1,11 @@
-import { CheckCircle, Github, BookOpen, Cloud, Shield, Users, Database, Server, Code } from 'lucide-react';
+import { CheckCircle, Github, BookOpen, Cloud, Shield, Users, Database, Server, Code, Mail } from 'lucide-react';
 import talelPhoto from '../assets/talel.png';
+import { useState } from 'react';
+import ContactModal from './ContactModal';
 
 export default function LandingPage({ onGoToLogin }) {
+  const [contactOpen, setContactOpen] = useState(false);
+
   return (
     <div className="dashboard-container">
       {/* Header / Breadcrumb */}
@@ -43,9 +47,11 @@ export default function LandingPage({ onGoToLogin }) {
               <span className="status-badge submitted">Live Demo</span>
               <h1>MERN Project: Authentication & Roles</h1>
             </div>
-            <button className="btn-primary" onClick={onGoToLogin}>
-              Accéder à l'application
-            </button>
+            <div className="project-actions">
+              <button className="btn-primary" onClick={onGoToLogin}>Accéder à l'application</button>
+              <button className="btn-ghost btn-mail" onClick={() => setContactOpen(true)}><Mail size={14} /> Contact / Support</button>
+              <a className="btn-ghost" href="https://github.com/talelchaanbi/MERNProject" target="_blank" rel="noopener noreferrer"><Github size={16} /> Voir sur GitHub</a>
+            </div>
           </div>
 
           <div className="project-body">
@@ -91,6 +97,7 @@ export default function LandingPage({ onGoToLogin }) {
           </div>
         </div>
       </div>
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   );
 }

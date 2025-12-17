@@ -8,6 +8,8 @@ import RegisterUserForm from './components/RegisterUserForm';
 import Navbar from './components/Navbar';
 import UserList from './components/UserList';
 import LandingPage from './components/LandingPage';
+import MessagesList from './components/MessagesList';
+import ContactModal from './components/ContactModal';
 import Footer from './components/Footer';
 
 function App() {
@@ -103,6 +105,10 @@ function App() {
 
         {view === 'users' && user.role === 'ADMIN' && (
           <UserList />
+        )}
+
+        {view === 'messages' && user.role === 'ADMIN' && (
+          <MessagesList />
         )}
 
         {view === 'register' && user.role === 'ADMIN' && (
