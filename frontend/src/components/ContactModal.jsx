@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Mail, Phone } from 'lucide-react';
 import { sendMessage } from '../api/messages';
+import ConfirmModal from './ConfirmModal';
 
 export default function ContactModal({ open, onClose }) {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', organization: '', message: '' });
   const [errors, setErrors] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [successPopup, setSuccessPopup] = useState(false);
   const [loading, setLoading] = useState(false);
 
   if (!open) return null;
@@ -21,7 +23,9 @@ export default function ContactModal({ open, onClose }) {
     setLoading(true);
     try {
       await sendMessage(form);
-      setSuccess('Message envoyé. Merci, nous vous contacterons bientôt.');
+      const msg = 'Message envoyé. Merci, nous vous contacterons bientôt.';
+      setSuccess(msg);
+      setSuccessPopup(true);
       setForm({ firstName: '', lastName: '', email: '', phone: '', organization: '', message: '' });
     } catch (err) {
       setErrors(err?.message || 'Erreur lors de l\'envoi');
@@ -29,6 +33,17 @@ export default function ContactModal({ open, onClose }) {
       setLoading(false);
     }
   };
+
+  // Auto-close the confirmation popup after 3s and close the contact modal
+  useEffect(() => {
+    if (!successPopup) return undefined;
+    const t = setTimeout(() => {
+      setSuccessPopup(false);
+      setSuccess(null);
+      onClose(false);
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [successPopup, onClose]);
 
   return (
     <div className="modal-overlay" role="dialog" aria-modal="true">
@@ -71,6 +86,15 @@ export default function ContactModal({ open, onClose }) {
             <button type="button" className="btn-secondary" onClick={() => onClose(false)}>Annuler</button>
           </div>
         </form>
+        <ConfirmModal
+          isOpen={successPopup}
+          title="Message envoyé"
+          message={success}
+          onClose={() => { setSuccessPopup(false); setSuccess(null); onClose(false); }}
+          onConfirm={() => { setSuccessPopup(false); setSuccess(null); onClose(false); }}
+          confirmText="Fermer"
+          cancelText=""
+        />
       </div>
     </div>
   );
