@@ -10,5 +10,6 @@ router.post('/', createMessage);
 router.get('/', requireRole('ADMIN'), getMessages);
 router.get('/:id', requireRole('ADMIN'), getMessage);
 router.patch('/:id/read', requireRole('ADMIN'), markRead);
+router.get('/counts', requireRole('ADMIN'), messageController.getCounts);
 
 module.exports = router;
