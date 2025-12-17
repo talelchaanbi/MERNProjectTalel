@@ -257,6 +257,121 @@ input[type="file"]::file-selector-button:hover {
   z-index: 100;
 }
 
+/* Creative navbar styles */
+.navbar.creative {
+  background: linear-gradient(135deg, rgba(15,23,42,0.6), rgba(8,10,13,0.7));
+  border-radius: 12px;
+  margin: 1rem 0;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+}
+
+.navbar-left {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.brand-logo {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-color);
+}
+.brand-dot { color: var(--primary-color); margin-left: 6px }
+.brand-sub { font-size: 0.8rem; color: var(--text-secondary); }
+
+.navbar-menu { display:flex; gap: 0.75rem; align-items:center }
+.nav-item { padding: 0.5rem 0.85rem; border-radius: 10px; }
+.nav-item.active { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.03); }
+
+.creative-end { display:flex; align-items:center; gap:0.75rem }
+.welcome-block { text-align: right; margin-right: 0.75rem }
+.welcome-sub { display:block; color: var(--text-secondary); font-size:0.8rem }
+.navbar-actions { display:flex; gap:0.5rem; align-items:center }
+.icon-btn { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.4rem; display:inline-flex; align-items:center; justify-content:center; border: none; color: var(--text-color); }
+.icon-btn:hover { transform: translateY(-2px); }
+.logout-btn.simple { background: rgba(239,68,68,0.12); color: #fca5a5; padding: 0.5rem 0.8rem; border-radius: 8px }
+
+/* Footer styles */
+.app-footer {
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(2,6,23,0.2), rgba(2,6,23,0.15));
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-secondary);
+}
+.app, .card, .navbar.creative, .app-footer, body {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* User menu dropdown */
+.user-menu { position: relative; }
+.menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: rgba(2,6,23,0.95);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  min-width: 150px;
+  padding: 0.15rem;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+  z-index: 200;
+  animation: dropdownIn 120ms ease;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.32rem 0.55rem;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap; /* ensure text stays on a single line */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.menu-item svg { width: 14px; height: 14px; }
+.menu-item:hover { background: rgba(255,255,255,0.02); }
+
+@keyframes dropdownIn {
+  from { transform: translateY(-6px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Smooth theme transition helper: tint on body */
+body { transition: background-color 300ms ease, color 300ms ease; }
+body.dark { background-color: #071023; color: #e6eef6; }
+
+/* Avatar in menu button */
+.avatar-in-menu {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.06);
+}
+.avatar-btn { padding: 0; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+.avatar-initials { width: 28px; height: 28px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; font-weight:600; font-size:0.9rem }
+.footer-left { display:flex; flex-direction:column }
+.footer-sub { font-size:0.85rem; color:var(--text-muted) }
+.footer-center { font-size:0.9rem }
+.footer-right .footer-link { display:inline-flex; gap:0.5rem; align-items:center; color:var(--primary-color); }
+
+@media (max-width: 640px) {
+  .navbar.creative { padding: 0.75rem; margin: 0.5rem 0 }
+  .app-footer { flex-direction: column; gap: 0.5rem; text-align: center }
+}
+
 .navbar-brand h1 {
   margin: 0;
   font-size: 1.5rem;

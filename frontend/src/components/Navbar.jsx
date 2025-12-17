@@ -1,26 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sun, Moon, Github, User, LogOut, MoreVertical } from 'lucide-react';
 
 export default function Navbar({ user, logout, setView, currentView }) {
   // Prefer showing the user's last name (nom) as a friendly greeting.
   const getDisplayName = () => {
     if (!user) return '';
     const full = String(user.username || user.name || user.email || '');
-    // If full name contains spaces, take the last segment as 'nom'
     const parts = full.trim().split(/\s+/).filter(Boolean);
     if (parts.length > 1) {
       const last = parts[parts.length - 1];
       return last.charAt(0).toUpperCase() + last.slice(1);
     }
-    // Fallback: if email, use local-part before @
     if (full.includes('@')) return full.split('@')[0];
     return full;
   };
 
+  const [isDark, setIsDark] = useState(() => {
+    try {
+      const stored = localStorage.getItem('app:theme');
+      if (stored) return stored === 'dark';
+    } catch (e) {}
+    return document.body.classList.contains('dark');
+  });
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', isDark);
+    try {
+      localStorage.setItem('app:theme', isDark ? 'dark' : 'light');
+    } catch (e) {}
+  }, [isDark]);
+
+  // dropdown menu state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, []);
+
   return (
-    <nav className="navbar">
-      <div className="navbar-brand" onClick={() => setView('dashboard')}>
-        <h1>MERN Auth</h1>
+    <nav className="navbar creative">
+      <div className="navbar-left" onClick={() => setView('dashboard')}>
+        <div className="brand-logo">MERN<span className="brand-dot">•</span></div>
+        <div className="brand-sub">Authentication & Roles</div>
       </div>
+
       <div className="navbar-menu">
         <button 
           className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`}
@@ -28,7 +58,6 @@ export default function Navbar({ user, logout, setView, currentView }) {
         >
           Tableau de bord
         </button>
-        
         {user.role === 'ADMIN' && (
           <>
             <button 
@@ -46,11 +75,42 @@ export default function Navbar({ user, logout, setView, currentView }) {
           </>
         )}
       </div>
-      <div className="navbar-end">
-        <span className="welcome">Bonjour {getDisplayName()}</span>
-        <button onClick={logout} className="logout-btn">
-          Se déconnecter
-        </button>
+
+      <div className="navbar-end creative-end">
+        <div className="welcome-block">
+          <span className="welcome">Bonjour {getDisplayName()}</span>
+          <span className="welcome-sub">{user.role}</span>
+        </div>
+
+        <div className="navbar-actions">
+          <a href="https://github.com/talelchaanbi/MERNProject" target="_blank" rel="noreferrer" className="icon-btn" title="Repository">
+            <Github size={18} />
+          </a>
+
+          <button className="icon-btn" onClick={() => setIsDark(!isDark)} title="Toggle theme">
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          <div className="user-menu" ref={menuRef}>
+            <button className="icon-btn avatar-btn" onClick={() => setMenuOpen((s) => !s)} title="Menu">
+              {user.profilePicture ? (
+                <img src={user.profilePicture} alt={user.username} className="avatar-in-menu" />
+              ) : (
+                <div className="avatar-initials">{(user.username || user.email || '?').toString().trim().split(/\s+/).slice(-1)[0]?.[0]?.toUpperCase()}</div>
+              )}
+            </button>
+            {menuOpen && (
+              <div className="menu-dropdown">
+                <button className="menu-item" onClick={() => { setMenuOpen(false); setView('dashboard'); }}>
+                  <User size={16} /> Mon profil
+                </button>
+                <button className="menu-item" onClick={() => { setMenuOpen(false); logout(); }}>
+                  <LogOut size={16} /> Se déconnecter
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </nav>
   );
