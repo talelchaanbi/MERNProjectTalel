@@ -13,6 +13,7 @@ const INITIAL_FORM = {
   username: '',
   email: '',
   password: '',
+  confirmPassword: '',
   phone: '',
   role: ROLES[1]?.value || 'RECRUT',
   profilePicture: null,
@@ -37,6 +38,8 @@ export default function RegisterUserForm({ onCreated }) {
       form.username.trim() &&
       form.email.trim() &&
       form.password.trim() &&
+      form.confirmPassword.trim() &&
+      form.password === form.confirmPassword &&
       form.role.trim()
     );
   }, [form]);
@@ -47,17 +50,27 @@ export default function RegisterUserForm({ onCreated }) {
       setForm((prev) => ({ ...prev, profilePicture: files?.[0] || null }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
+      // Clear password mismatch error while typing
+      if ((name === 'password' || name === 'confirmPassword')) {
+        setErrors((prev) => prev.filter((m) => m !== 'Les mots de passe ne correspondent pas.'));
+      }
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!canSubmit || registerStatus === 'loading') return;
+    if (!canSubmit || registerStatus === 'loading') {
+      if (form.password !== form.confirmPassword) {
+        setErrors(['Les mots de passe ne correspondent pas.']);
+      }
+      return;
+    }
 
     const payload = new FormData();
     payload.append('username', form.username.trim());
     payload.append('email', form.email.trim());
     payload.append('password', form.password);
+    // confirmPassword is for client validation only; don't send it to the server
     if (form.phone.trim()) {
       payload.append('phone', form.phone.trim());
     }
@@ -73,6 +86,8 @@ export default function RegisterUserForm({ onCreated }) {
       const user = await dispatch(registerUser(payload)).unwrap();
       setSuccess(`Utilisateur ${user.username} créé avec succès.`);
       setForm({ ...INITIAL_FORM });
+      // ensure confirmPassword cleared as well
+      setForm((prev) => ({ ...prev, confirmPassword: '' }));
       // If parent provided a callback, navigate back to users list
       if (typeof onCreated === 'function') {
         onCreated();
@@ -128,6 +143,19 @@ export default function RegisterUserForm({ onCreated }) {
             onChange={handleChange}
             required
           />
+        </label>
+        <label className="form-label">
+          Confirmer le mot de passe
+          <input
+            type="password"
+            name="confirmPassword"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            required
+          />
+          {form.confirmPassword && form.password !== form.confirmPassword && (
+            <div className="field-error">Les mots de passe ne correspondent pas.</div>
+          )}
         </label>
         <label className="form-label">
           Téléphone (optionnel)

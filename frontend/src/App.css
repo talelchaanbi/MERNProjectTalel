@@ -1432,6 +1432,11 @@ body.dark { background-color: #071023; color: #e6eef6; }
   font-size: 0.9rem;
   margin-bottom: 0.25rem;
 }
+.field-error {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  color: #fca5a5;
+}
 
 .form-error-item:last-child {
   margin-bottom: 0;
