@@ -28,17 +28,9 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Archive backend for deployment
-        run: |
-          cd $GITHUB_WORKSPACE
-          # remove existing zip if any
-          rm -f backend.zip || true
-          # include backend folder contents in a zip
-          zip -r backend.zip backend -x "**/node_modules/*" || true
-
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: mernproject-talel-2025
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: backend.zip
+          package: backend
