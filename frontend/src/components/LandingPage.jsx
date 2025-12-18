@@ -6,18 +6,24 @@ import ErrorBoundary from './ErrorBoundary';
 
 export default function LandingPage({ onGoToLogin }) {
   const [contactOpen, setContactOpen] = useState(false);
+  const mailSubject = "Demande d'accès - MERN Project";
+  const mailBody = 'Bonjour,%0A%0AJe souhaite accéder au dépôt "MERN Project". Voici mes informations :%0A- Nom : %0A- Organisation : %0A- Raison : %0A%0AMerci,%0A[Votre nom]';
+  const mailToAccess = `mailto:talelchaanbi00@gmail.com?subject=${encodeURIComponent(mailSubject)}&body=${mailBody}`;
+  const supportSubject = 'Support - MERN Project';
+  const supportBody = 'Bonjour,%0A%0AJai besoin d\'assistance sur MERN Project. Détails :%0A%0A';
+  const mailToSupport = `mailto:talelchaanbi00@gmail.com?subject=${encodeURIComponent(supportSubject)}&body=${supportBody}`;
 
   return (
     <div className="dashboard-container">
       {/* Header / Breadcrumb */}
       <div className="dashboard-header">
-        <div className="user-profile-mini">
-          <img src={talelPhoto} alt="Talel Chaanbi" className="avatar-circle" />
-          <div className="user-info">
-            <span className="name">Talel Chaanbi</span>
-            <span className="role">Software Engineer</span>
+          <div className="user-profile-mini">
+            <img src={talelPhoto} alt="Samiha Kallel" className="avatar-circle" />
+            <div className="user-info">
+              <span className="name">Samiha Kallel</span>
+              <span className="role">Recruteur</span>
+            </div>
           </div>
-        </div>
       </div>
 
       <div className="dashboard-content">
@@ -59,11 +65,11 @@ export default function LandingPage({ onGoToLogin }) {
               >
                 <Mail size={14} /> Contact / Support
               </button>
-              <a
-                className="btn-ghost"
-                href="mailto:?subject=Demande%20d%27acc%C3%A8s%20-%20MERN%20Project&body=Bonjour%2C%0A%0AJe%20souhaite%20acc%C3%A9der%20au%20d%C3%A9p%C3%B4t%20%22MERN%20Project%22.%20Voici%20mes%20informations%20%3A%0A-%20Nom%20%3A%0A-%20Organisation%20%3A%0A-%20Raison%20%3A%0A%0AMerci%2C%0A%5BVotre%20nom%5D"
-                aria-label="Demander l'accès au dépôt"
-              >
+              <a className="btn-mail btn-email" href={mailToSupport} aria-label="Envoyer un email au support">
+                <Mail size={16} />
+                <span>Envoyer un email</span>
+              </a>
+              <a className="btn-ghost" href={mailToAccess} aria-label="Demander l'accès au dépôt">
                 <Mail size={14} /> Demander l'accès
               </a>
               <a className="btn-ghost" href="https://github.com/talelchaanbi/MERNProject" target="_blank" rel="noopener noreferrer"><Github size={16} /> Voir sur GitHub</a>
@@ -113,6 +119,29 @@ export default function LandingPage({ onGoToLogin }) {
           </div>
         </div>
       </div>
+      <footer className="landing-support-card" aria-labelledby="support-heading">
+        <div className="support-card">
+          <div className="support-left">
+            <h4 id="support-heading">Besoin d'aide ?</h4>
+            <p className="support-sub">Notre équipe support traite les demandes d'accès et les questions techniques. Choisissez la méthode qui vous convient — nous vous répondrons rapidement.</p>
+            <ul className="support-list">
+              <li>
+                <strong>Email :</strong>
+                <a href="mailto:talelchaanbi00@gmail.com" aria-label="Envoyer un email au support">talelchaanbi00@gmail.com</a>
+              </li>
+              <li>
+                <strong>Téléphone :</strong>
+                <a href="tel:+21629104308" aria-label="Appeler le support">+216 29 104 308</a>
+              </li>
+              <li>
+                <strong>Horaires :</strong>
+                <span>Lu–Ve, 09:00–17:00 (Tunis) — Réponse sous 24h ouvrables</span>
+              </li>
+            </ul>
+          </div>
+          
+        </div>
+      </footer>
       <ErrorBoundary>
         <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
       </ErrorBoundary>

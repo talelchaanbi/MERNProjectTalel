@@ -342,6 +342,31 @@ exports.updateUserByAdmin = async (req, res) => {
       user.profilePicture = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     }
 
+    // Allow admin to set/reset a user's password. Support either 'password' or 'newPassword'.
+    const incomingPassword = (typeof req.body.password !== 'undefined' && req.body.password)
+      ? req.body.password
+      : (typeof req.body.newPassword !== 'undefined' && req.body.newPassword)
+        ? req.body.newPassword
+        : null;
+
+    if (incomingPassword) {
+      // If admin is updating their own password via this admin endpoint, require currentPassword
+      if (req.userId && req.userId.toString() === req.params.id.toString()) {
+        const currentPassword = req.body.currentPassword;
+        if (!currentPassword) {
+          return res.status(400).json({ msg: 'Current password is required to change your password' });
+        }
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+          return res.status(400).json({ msg: 'Current password is incorrect' });
+        }
+      }
+
+      console.debug(`Admin password change requested for user ${req.params.id}`);
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(incomingPassword, salt);
+    }
+
     await user.save();
     
     // Re-populate for response
