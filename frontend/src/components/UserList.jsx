@@ -91,12 +91,16 @@ export default function UserList() {
                 <tr key={user._id}>
                   <td className="user-cell">
                     <div className="avatar-wrapper">
-                      {user.profilePicture ? (
-                        <img src={user.profilePicture} alt="" className="avatar-small" />
-                      ) : (
-                        <div className="avatar-small placeholder">
-                          <User size={16} />
-                        </div>
+                      <div className="avatar-small placeholder">
+                        <User size={16} />
+                      </div>
+                      {user.profilePicture && (
+                        <img
+                          src={`${user.profilePicture}${user.profilePicture.includes('?') ? '&' : '?'}_=${user._id || Date.now()}`}
+                          alt={user.username}
+                          className="avatar-small avatar-on-top"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
                       )}
                       <span className={`status-dot ${user.isOnline ? 'online' : 'offline'}`}></span>
                     </div>

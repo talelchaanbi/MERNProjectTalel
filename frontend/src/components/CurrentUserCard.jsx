@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateProfile } from '../store/authSlice';
 import { AlertTriangle } from 'lucide-react';
@@ -12,6 +12,8 @@ export default function CurrentUserCard({ user }) {
     phone: user?.phone || '',
     profilePicture: null
   });
+  const [avatarKey, setAvatarKey] = useState(Date.now());
+  const [localPreview, setLocalPreview] = useState(null);
   const [passwordFields, setPasswordFields] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
 
   if (!user) return null;
@@ -28,7 +30,15 @@ export default function CurrentUserCard({ user }) {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'profilePicture') {
-      setForm(prev => ({ ...prev, profilePicture: files[0] }));
+      const file = files[0];
+      setForm(prev => ({ ...prev, profilePicture: file }));
+      // create a temporary preview URL for immediate feedback
+      if (file) {
+        const url = URL.createObjectURL(file);
+        setLocalPreview(url);
+      } else {
+        setLocalPreview(null);
+      }
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
@@ -63,9 +73,16 @@ export default function CurrentUserCard({ user }) {
     }
     try {
       await dispatch(updateProfile(formData)).unwrap();
+      // force avatar reload (cache-busting) so updated image appears immediately
+      setAvatarKey(Date.now());
       setIsEditing(false);
       setErrors([]);
       setPasswordFields({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+      // cleanup preview URL
+      if (localPreview) {
+        URL.revokeObjectURL(localPreview);
+        setLocalPreview(null);
+      }
     } catch (errPayload) {
       if (Array.isArray(errPayload)) {
         setErrors(errPayload.map((item) => item.msg || item.message || 'Erreur de validation'));
@@ -151,6 +168,11 @@ export default function CurrentUserCard({ user }) {
               onChange={handleChange} 
               accept="image/*"
             />
+            {localPreview && (
+              <div style={{ marginTop: '0.6rem' }}>
+                <img src={localPreview} alt="Aperçu" style={{ width: 96, height: 96, borderRadius: 12, objectFit: 'cover', boxShadow: '0 6px 18px rgba(0,0,0,0.2)' }} />
+              </div>
+            )}
           </label>
           <div className="form-actions">
             <button type="submit">Enregistrer</button>
@@ -169,7 +191,7 @@ export default function CurrentUserCard({ user }) {
       </div>
       <div className="profile">
         {user.profilePicture ? (
-          <img src={user.profilePicture} alt={user.username} className="profile-avatar" />
+          <img src={`${user.profilePicture}${user.profilePicture.includes('?') ? '&' : '?'}_=${avatarKey}`} alt={user.username} className="profile-avatar" />
         ) : (
           <div className="profile-avatar placeholder">{user.username?.[0]?.toUpperCase() || '?'}</div>
         )}
