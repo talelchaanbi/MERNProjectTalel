@@ -303,13 +303,21 @@ exports.logout = async (req, res) => {
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    // Exclude the currently authenticated user (req.userId) so admins don't see themselves in the list
-    // Also exclude soft-deleted users (deletedAt != null)
-    const users = await User.find({ _id: { $ne: req.userId }, deletedAt: null }).populate('role', 'lib').select('-password');
+    // Optionally include soft-deleted users when query ?includeDeleted=true is provided
+    // By default, soft-deleted users (deletedAt != null) are excluded from the list
+    const includeDeleted = String(req.query.includeDeleted || '').toLowerCase() === 'true';
+
+    const filter = { _id: { $ne: req.userId } };
+    if (!includeDeleted) {
+      filter.deletedAt = null;
+    }
+
+    const users = await User.find(filter).populate('role', 'lib').select('-password');
     const formattedUsers = users.map(u => ({
       ...u.toObject(),
       role: u.role?.lib || 'UNKNOWN'
     }));
+
     res.json(formattedUsers);
   } catch (err) {
     console.error(err.message);
