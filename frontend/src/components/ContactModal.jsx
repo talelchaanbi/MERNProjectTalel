@@ -20,6 +20,15 @@ export default function ContactModal({ open, onClose }) {
   useEffect(() => {
     if (!successPopup) return undefined;
     const t = setTimeout(() => {
+      // redirect to landing page then close modal
+      try {
+        // navigate to root (landing page)
+        if (typeof window !== 'undefined') {
+          window.location.assign('/');
+        }
+      } catch (e) {
+        // ignore navigation errors
+      }
       setSuccessPopup(false);
       setSuccess(null);
       onClose(false);
