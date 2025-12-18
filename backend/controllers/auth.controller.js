@@ -304,7 +304,8 @@ exports.logout = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     // Exclude the currently authenticated user (req.userId) so admins don't see themselves in the list
-    const users = await User.find({ _id: { $ne: req.userId } }).populate('role', 'lib').select('-password');
+    // Also exclude soft-deleted users (deletedAt != null)
+    const users = await User.find({ _id: { $ne: req.userId }, deletedAt: null }).populate('role', 'lib').select('-password');
     const formattedUsers = users.map(u => ({
       ...u.toObject(),
       role: u.role?.lib || 'UNKNOWN'
