@@ -154,18 +154,11 @@ export default function Navbar({ user, logout, setView, currentView }) {
 
           <div className="user-menu" ref={menuRef}>
             <button className="icon-btn avatar-btn" onClick={() => setMenuOpen((s) => !s)} title="Menu">
-              <div className="avatar-stack">
+              {user.profilePicture && !avatarBroken ? (
+                <img src={user.profilePicture} alt={user.username} className="avatar-in-menu" onError={() => setAvatarBroken(true)} onLoad={() => setAvatarBroken(false)} />
+              ) : (
                 <div className="avatar-initials">{(user.username || user.email || '?').toString().trim().split(/\s+/).slice(-1)[0]?.[0]?.toUpperCase()}</div>
-                {user.profilePicture && (
-                  <img
-                    src={`${user.profilePicture}${user.profilePicture.includes('?') ? '&' : '?'}_=${user._id || Date.now()}`}
-                    alt={user.username}
-                    className="avatar-in-menu"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; setAvatarBroken(true); }}
-                    onLoad={(e) => { e.currentTarget.style.display = ''; setAvatarBroken(false); }}
-                  />
-                )}
-              </div>
+              )}
             </button>
             {menuOpen && (
               <div className="menu-dropdown" role="menu" aria-label="Menu utilisateur">

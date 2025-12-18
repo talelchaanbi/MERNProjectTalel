@@ -97,13 +97,7 @@
   align-items:center;
   gap:0.6rem;
 }
-.avatar-stack { position: relative; width: 40px; height: 40px; display: inline-block; }
-.avatar-initials { width: 40px; height: 40px; border-radius: 999px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg,#0ea5e9,#7c3aed); color:#fff; font-weight:700; }
-.avatar-in-menu { position: absolute; inset: 0; width: 40px; height: 40px; object-fit: cover; border-radius: 999px; }
 .project-actions .btn-primary .icon-left { transform: translateY(-1px); }
-.avatar-wrapper { position: relative; display: inline-flex; gap: 0.6rem; align-items: center; }
-.avatar-small.placeholder { width: 36px; height: 36px; border-radius: 8px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); }
-.avatar-small.avatar-on-top { position: absolute; left: 0; top: 0; width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
 .project-actions .btn-ghost {
   padding: 0.6rem 1rem;
   border-radius: 12px;
