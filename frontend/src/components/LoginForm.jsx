@@ -8,7 +8,7 @@ const INITIAL_FORM = {
   password: '',
 };
 
-export default function LoginForm({ onBackToHome }) {
+export default function LoginForm({ onBackToHome, onGoToRegister }) {
   const dispatch = useDispatch();
   const { status } = useSelector((state) => state.auth);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -134,6 +134,24 @@ export default function LoginForm({ onBackToHome }) {
             <span>{status === 'loading' ? 'Connexion en cours...' : 'Se connecter'}</span>
             {!status === 'loading' && <ArrowRight size={20} />}
           </button>
+          <div style={{ marginTop: '0.75rem', textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => typeof onGoToRegister === 'function' && onGoToRegister()}
+              className="link-button"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#60a5fa',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: 0,
+                fontSize: '0.95rem'
+              }}
+            >
+              Vous n'avez pas de compte ? Créer un compte
+            </button>
+          </div>
         </form>
       </div>
     </div>

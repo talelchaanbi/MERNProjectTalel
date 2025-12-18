@@ -54,3 +54,13 @@ export async function getUserById(userId) {
   const { data } = await client.get(`/auth/users/${userId}`);
   return data;
 }
+
+export async function verifyEmail({ token, id }) {
+  const { data } = await client.get(`/auth/verify?token=${encodeURIComponent(token)}&id=${encodeURIComponent(id)}`);
+  return data;
+}
+
+export async function resendVerification(email) {
+  const { data } = await client.post('/auth/resend-verification', { email });
+  return data;
+}

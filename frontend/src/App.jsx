@@ -8,6 +8,7 @@ import RegisterUserForm from './components/RegisterUserForm';
 import Navbar from './components/Navbar';
 import UserList from './components/UserList';
 import LandingPage from './components/LandingPage';
+import VerifyPage from './components/VerifyPage';
 import MessagesList from './components/MessagesList';
 import ContactModal from './components/ContactModal';
 import Footer from './components/Footer';
@@ -69,6 +70,16 @@ function App() {
   }
 
   if (!isAuthenticated) {
+    // Support direct verify URL like /verify?token=...&id=...
+    if (typeof window !== 'undefined' && window.location.pathname === '/verify') {
+      return (
+        <div className="app">
+          <main className="app-main">
+            <VerifyPage />
+          </main>
+        </div>
+      );
+    }
     return (
       <div className="app">
         {unauthView === 'home' && (
@@ -79,8 +90,12 @@ function App() {
         <main className="app-main">
           {unauthView === 'home' ? (
             <LandingPage onGoToLogin={() => setUnauthView('login')} />
+          ) : unauthView === 'login' ? (
+            <LoginForm onBackToHome={() => setUnauthView('home')} onGoToRegister={() => setUnauthView('register')} />
+          ) : unauthView === 'register' ? (
+            <RegisterUserForm excludeAdmin={true} onCreated={() => setUnauthView('login')} onBack={() => setUnauthView('login')} />
           ) : (
-            <LoginForm onBackToHome={() => setUnauthView('home')} />
+            <LandingPage onGoToLogin={() => setUnauthView('login')} />
           )}
         </main>
       </div>
@@ -112,7 +127,7 @@ function App() {
         )}
 
         {view === 'register' && user.role === 'ADMIN' && (
-          <RegisterUserForm onCreated={() => setView('users')} />
+          <RegisterUserForm onCreated={() => setView('users')} onBack={() => setView('users')} />
         )}
       </main>
       <Footer />

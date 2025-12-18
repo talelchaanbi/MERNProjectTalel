@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, currentUser, logout, getAllUsers, updateProfile, updateUserStatus, deleteUser, updateUserByAdmin, getUserById } = require('../controllers/auth.controller');
+const { register, login, currentUser, logout, getAllUsers, updateProfile, updateUserStatus, deleteUser, updateUserByAdmin, getUserById, verifyEmail, resendVerification } = require('../controllers/auth.controller');
 const { validateRegister, validateLogin } = require('../controllers/validations/authValidations');
 const { validate } = require('../controllers/validations/validator');
 const upload = require('../utils/multer');
@@ -10,12 +10,14 @@ const router = express.Router();
 
 router.post(
 	'/register',
-	auth,
-	requireRole('ADMIN'),
+	// Public registration: allow unauthenticated users to create non-ADMIN accounts.
+	// Admin users (authenticated) may still create users with any role via this endpoint.
 	upload.single('profilePicture'),
 	validate(validateRegister),
 	register
 );
+router.post('/resend-verification', require('express').json(), resendVerification);
+router.get('/verify', verifyEmail);
 router.post('/login', validate(validateLogin), login);
 router.get('/me', auth, currentUser);
 router.put('/me', auth, upload.single('profilePicture'), updateProfile);

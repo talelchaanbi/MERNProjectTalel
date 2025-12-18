@@ -3,6 +3,9 @@ const { promises: fs } = require('fs');
 const User = require('../models/User');
 const Role = require('../models/Role');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const VerificationToken = require('../models/VerificationToken');
+const { sendVerificationEmail } = require('../utils/mailer');
 
 async function removeUploadedFile(file) {
   if (!file?.path) return;
@@ -54,13 +57,23 @@ exports.register = async (req, res) => {
       return res.status(400).json({ msg: "Role does not exist" });
     }
 
-    //create new user
+    // Security: prevent creation of ADMIN users by unauthenticated/non-admin requests.
+    // If the requester is authenticated and has role ADMIN (set by auth middleware), allow it.
+    const requesterRole = String(req.userRole || req.session?.userRole || '').trim().toUpperCase();
+    const isRequesterAdmin = requesterRole === 'ADMIN';
+    if (foundRole.lib === 'ADMIN' && !isRequesterAdmin) {
+      await removeUploadedFile(req.file);
+      return res.status(403).json({ msg: 'Not authorized to create ADMIN users' });
+    }
+
+    //create new user (inactive until email verified)
     const userData = {
       username,
       email,
       password,
       phone,
       role: foundRole._id,
+      isActive: false,
     };
 
     if (profilePicture) {
@@ -75,8 +88,30 @@ exports.register = async (req, res) => {
 
     //save user
     await user.save();
+
+    // generate verification token and persist
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + (1000 * 60 * 60 * 24)); // 24 hours
+    await VerificationToken.create({ user: user._id, token, expiresAt });
+
+    // send verification email (or log link if SMTP not configured)
+    let mailResult = null;
+    try {
+      mailResult = await sendVerificationEmail(email, token, user._id.toString());
+      // Log helpful info for operators: either the verifyUrl (when no transporter) or messageId
+      if (mailResult?.verifyUrl) {
+        console.info('Verification link (dev):', mailResult.verifyUrl);
+      } else if (mailResult?.info) {
+        console.info('Verification email sent, messageId:', mailResult.info.messageId);
+        console.info('Mail accepted recipients:', mailResult.info.accepted);
+      }
+    } catch (err) {
+      console.error('Error sending verification email:', err?.message || err);
+      // continue - user can still be verified manually by admin
+    }
+
     res.status(201).json({
-      msg: "User registered successfully",
+      msg: "User registered successfully. Vérifiez votre email pour activer le compte.",
       user: {
         id: user._id,
         username: user.username,
@@ -84,7 +119,7 @@ exports.register = async (req, res) => {
         phone: user.phone,
         role: foundRole.lib,
         profilePicture: user.profilePicture,
-
+        isActive: user.isActive,
       },
     });
   } catch (error) {
@@ -114,7 +149,7 @@ exports.login = async (req, res) => {
     }
 
     if (!user.isActive) {
-      return res.status(403).json({ msg: 'Account is disabled' });
+      return res.status(403).json({ msg: 'Account is disabled or email not verified' });
     }
 
     user.isOnline = true;
@@ -162,6 +197,75 @@ exports.currentUser = async (req, res) => {
   } catch (error) {
     console.error('Error fetching current user:', error.message);
     res.status(500).send('Server error');
+  }
+};
+
+// email verification handler
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token, id } = req.query;
+    if (!token || !id) return res.status(400).json({ msg: 'Token and id are required' });
+
+    const v = await VerificationToken.findOne({ user: id, token });
+    if (!v) {
+      // If there's no token found, the token may have already been used.
+      // Treat this case as idempotent: if the user is already active, return success.
+      const maybeUser = await User.findById(id);
+      if (maybeUser && maybeUser.isActive) {
+        return res.json({ msg: 'Email verified successfully' });
+      }
+      return res.status(400).json({ msg: 'Invalid or expired token' });
+    }
+
+    if (v.expiresAt < new Date()) {
+      await VerificationToken.deleteOne({ _id: v._id });
+      return res.status(400).json({ msg: 'Token expired' });
+    }
+
+    // activate user
+    await User.findByIdAndUpdate(id, { isActive: true });
+    // delete the token (single-use)
+    await VerificationToken.deleteOne({ _id: v._id });
+
+    return res.json({ msg: 'Email verified successfully' });
+  } catch (err) {
+    console.error('verifyEmail error:', err.message);
+    return res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// resend verification email
+exports.resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ msg: 'Email is required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    if (user.isActive) return res.status(400).json({ msg: 'Account already active' });
+
+    // remove any existing tokens for this user
+    await VerificationToken.deleteMany({ user: user._id });
+
+    // generate new token
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + (1000 * 60 * 60 * 24)); // 24 hours
+    await VerificationToken.create({ user: user._id, token, expiresAt });
+
+    // send email
+    try {
+      const mailResult = await sendVerificationEmail(email, token, user._id.toString());
+      if (mailResult?.verifyUrl) console.info('Verification link (dev):', mailResult.verifyUrl);
+      else if (mailResult?.info) console.info('Verification email sent, messageId:', mailResult.info.messageId);
+    } catch (err) {
+      console.error('Error sending verification email (resend):', err?.message || err);
+    }
+
+    return res.json({ msg: 'Verification email sent' });
+  } catch (err) {
+    console.error('resendVerification error:', err.message || err);
+    return res.status(500).json({ msg: 'Server error' });
   }
 };
 

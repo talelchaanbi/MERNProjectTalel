@@ -398,6 +398,88 @@ button, .btn-primary, .btn-ghost, .btn-mail {
 }
 
 /* File input styling */
+
+/* Register popup (ergonomic) */
+.register-popup-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,23,0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  z-index: 1200;
+  padding: 2rem;
+}
+
+.register-popup-card {
+  width: 100%;
+  max-width: 640px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(2,6,23,0.6);
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.25rem 1.35rem;
+  transform: translateY(8px);
+  animation: popupIn 360ms cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+}
+
+.register-popup-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-popup-card h3 {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.register-popup-content p {
+  margin: 0 0 0.6rem 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.register-popup-actions { display:flex; gap:0.5rem; align-items:center }
+
+.register-popup-timer {
+  grid-column: 1 / -1;
+  margin-top: 0.6rem;
+  height: 6px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.register-popup-timer-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #06b6d4, #7c3aed);
+  transform-origin: left center;
+  animation: progressBar 4s linear forwards;
+}
+
+@keyframes popupIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes progressBar {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@media (max-width: 560px) {
+  .register-popup-card { grid-template-columns: 1fr; padding: 1rem; }
+  .register-popup-icon { margin-bottom: 0.35rem }
+}
 input[type="file"] {
   padding: 0.5rem;
   background: transparent;
