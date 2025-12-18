@@ -20,8 +20,8 @@ export default function LandingPage({ onGoToLogin }) {
           <div className="user-profile-mini">
             <img src={talelPhoto} alt="Samiha Kallel" className="avatar-circle" />
             <div className="user-info">
-              <span className="name">Samiha Kallel</span>
-              <span className="role">Recruteur</span>
+              <span className="name">Chaanbi Talel</span>
+              <span className="role">Administrateur</span>
             </div>
           </div>
       </div>
