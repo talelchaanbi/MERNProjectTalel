@@ -417,8 +417,13 @@ exports.deleteUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ msg: 'User deleted successfully', id: req.params.id });
+    // Perform a soft delete: mark user inactive and set deletedAt timestamp
+    user.isActive = false;
+    user.isOnline = false;
+    user.deletedAt = new Date();
+    await user.save();
+
+    res.json({ msg: 'User soft-deleted (deactivated) successfully', id: req.params.id });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

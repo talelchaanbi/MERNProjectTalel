@@ -44,6 +44,12 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // soft-delete timestamp (null when not deleted)
+    deletedAt: {
+      type: Date,
+      required: false,
+      default: null,
+    },
   },
 
   { timestamps: true, versionKey: false }
