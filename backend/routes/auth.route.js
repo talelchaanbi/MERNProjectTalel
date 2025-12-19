@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, currentUser, logout, getAllUsers, updateProfile, updateUserStatus, deleteUser, updateUserByAdmin, getUserById, verifyEmail, resendVerification } = require('../controllers/auth.controller');
+const { register, login, currentUser, logout, getAllUsers, updateProfile, updateUserStatus, deleteUser, updateUserByAdmin, getUserById, verifyEmail, resendVerification, status } = require('../controllers/auth.controller');
 const { validateRegister, validateLogin } = require('../controllers/validations/authValidations');
 const { validate } = require('../controllers/validations/validator');
 const upload = require('../utils/multer');
@@ -20,6 +20,7 @@ router.post('/resend-verification', require('express').json(), resendVerificatio
 router.get('/verify', verifyEmail);
 router.post('/login', validate(validateLogin), login);
 router.get('/me', auth, currentUser);
+router.get('/status', status);
 router.put('/me', auth, upload.single('profilePicture'), updateProfile);
 router.post('/logout', auth, logout);
 router.get('/users', auth, requireRole('ADMIN'), getAllUsers);

@@ -17,7 +17,8 @@ export async function registerUser(formData) {
 }
 
 export async function fetchCurrentUser() {
-  const { data } = await client.get('/auth/me');
+  // Use the public status endpoint to avoid 401 network errors when user is not authenticated
+  const { data } = await client.get('/auth/status');
   return data;
 }
 

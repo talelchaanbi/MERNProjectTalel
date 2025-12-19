@@ -200,6 +200,32 @@ exports.currentUser = async (req, res) => {
   }
 };
 
+// Public status endpoint: returns current user if session exists, otherwise { user: null }
+exports.status = async (req, res) => {
+  try {
+    const sessionUserId = req.session?.userId;
+    if (!sessionUserId) return res.json({ user: null });
+
+    const user = await User.findById(sessionUserId).populate('role').select('-password');
+    if (!user) return res.json({ user: null });
+
+    res.json({
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        role: user.role?.lib,
+        profilePicture: user.profilePicture,
+      },
+    });
+  } catch (err) {
+    console.error('status endpoint error:', err.message || err);
+    // Return neutral response to avoid exposing errors to clients during status check
+    res.json({ user: null });
+  }
+};
+
 // email verification handler
 exports.verifyEmail = async (req, res) => {
   try {
