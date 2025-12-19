@@ -41,6 +41,8 @@
   background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
   background-clip: text;
+  background-clip: text;
+
   -webkit-text-fill-color: transparent;
   font-size: 1.8rem;
 }
@@ -710,6 +712,7 @@ body.dark { background-color: #071023; color: #e6eef6; }
   font-size: 1.5rem;
   background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   cursor: pointer;
 }
@@ -2495,6 +2498,7 @@ body.dark { background-color: #071023; color: #e6eef6; }
   margin: 0;
   background: linear-gradient(to right, #fff, #cbd5e1);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
