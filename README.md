@@ -27,21 +27,13 @@ npm install
 Create `backend/.env` (values below are examples):
 
 ```
-MONGO_URI=mongodb+srv://user:password@cluster0.mongodb.net/mernproject
-
-# Optional: override DNS resolvers used for Atlas SRV TXT lookups
-MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8
-
-# Optional: fallback if your network blocks SRV/TXT lookups (use Atlas "Standard connection string")
-MONGO_URI_DIRECT=mongodb://user:password@host1:27017,host2:27017,host3:27017/mernproject?replicaSet=...&ssl=true&authSource=admin
-
-MONGO_DB_NAME=mernproject
-SESSION_SECRET=supersecurecookiesecret
-SESSION_MAX_AGE_HOURS=6
-HTTPS_ENABLED=false
-HTTPS_KEY_PATH=certs/server.key
-HTTPS_CERT_PATH=certs/server.crt
-PORT=4500
+MONGO_URI=
+SESSION_SECRET=
+SESSION_MAX_AGE_HOURS=
+HTTPS_ENABLED=
+HTTPS_KEY_PATH=
+HTTPS_CERT_PATH=
+PORT=
 ```
 
 ## Troubleshooting: `queryTxt ETIMEOUT ...mongodb.net`
@@ -93,16 +85,12 @@ npm install
 3. Variables d'environnement (ex. `backend/.env`) :
 
 ```
-MONGO_URI=mongodb+srv://user:password@cluster0.mongodb.net/mernproject
-MONGO_DB_NAME=mernproject
-SESSION_SECRET=une_chaine_longue_et_secrete
-SESSION_MAX_AGE_HOURS=6
-HTTPS_ENABLED=false
-PORT=4500
+MONGO_URI=
+SESSION_SECRET=
+SESSION_MAX_AGE_HOURS=
+HTTPS_ENABLED=
+PORT=
 ```
-
-Si vous utilisez Atlas et rencontrez des erreurs DNS (TXT query timeout), essayez `MONGO_DNS_SERVERS=1.1.1.1,8.8.8.8` ou fournissez `MONGO_URI_DIRECT` (connexion non-SRV).
-
 4. Lancer en local (chaque dossier dans un terminal) :
 
 ```bash
