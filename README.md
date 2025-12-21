@@ -155,5 +155,6 @@ Merci,
 [Votre nom]
 ```
 
-Si vous voulez, je peux aussi ajouter une confirmation (modal) avant d'ouvrir le client mail, ou stocker les demandes côté backend pour un suivi centralisé (nécessite un nouvel endpoint).
+## LIEN VERS LE SITE DÉPLOYÉ 
+https://mernproject-talel-2025-d6hwbjbtf0guf9gt.italynorth-01.azurewebsites.net/
 
