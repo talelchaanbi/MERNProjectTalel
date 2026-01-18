@@ -18,6 +18,9 @@ import JobApplicationsBoard from './components/JobApplicationsBoard';
 import SocialFeed from './components/SocialFeed';
 import ConnectionsBoard from './components/ConnectionsBoard';
 import ChatBoard from './components/ChatBoard';
+import DashboardStats from './components/DashboardStats';
+import RecommendationsBoard from './components/RecommendationsBoard';
+import NotificationsBoard from './components/NotificationsBoard';
 
 function App() {
   const dispatch = useDispatch();
@@ -129,6 +132,8 @@ function App() {
         {view === 'dashboard' && (
           <>
             <CurrentUserCard user={user} />
+            <DashboardStats />
+            <RecommendationsBoard user={user} />
             <div className="card">
               <h2>Bienvenue</h2>
               <p>Vous êtes connecté en tant que {user.role}.</p>
@@ -151,6 +156,10 @@ function App() {
 
         {view === 'chat' && (
           <ChatBoard />
+        )}
+
+        {view === 'notifications' && (
+          <NotificationsBoard />
         )}
 
         {view === 'applications' && user.role === 'CONSULTANT' && (

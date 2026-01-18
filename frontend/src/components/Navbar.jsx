@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, Github, User, LogOut, MoreVertical } from 'lucide-react';
 import { fetchMessageCounts } from '../api/messages';
+import { fetchUnreadCount } from '../api/notifications';
 
 export default function Navbar({ user, logout, setView, currentView }) {
   // Prefer showing the user's last name (nom) as a friendly greeting.
@@ -35,6 +36,7 @@ export default function Navbar({ user, logout, setView, currentView }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [counts, setCounts] = useState({ total: 0, urgent: 0, unread: 0 });
+  const [notifCount, setNotifCount] = useState(0);
   const [avatarBroken, setAvatarBroken] = useState(false);
   const menuRef = useRef(null);
   const countsRef = useRef(null);
@@ -62,9 +64,23 @@ export default function Navbar({ user, logout, setView, currentView }) {
         // ignore
       }
     };
+    const loadNotif = async () => {
+      try {
+        const res = await fetchUnreadCount();
+        if (!mounted) return;
+        setNotifCount(res?.unread || 0);
+      } catch (e) {}
+    };
     if (user && user.role === 'ADMIN') {
       loadCounts();
       timer = setInterval(loadCounts, 20000);
+    }
+    if (user) {
+      loadNotif();
+      timer = setInterval(() => {
+        loadNotif();
+        if (user.role === 'ADMIN') loadCounts();
+      }, 20000);
     }
     // listen for immediate updates triggered elsewhere
     function onUpdated(e) {
@@ -126,6 +142,17 @@ export default function Navbar({ user, logout, setView, currentView }) {
           onClick={() => setView('chat')}
         >
           Messages
+        </button>
+        <button
+          className={`nav-item ${currentView === 'notifications' ? 'active' : ''}`}
+          onClick={() => setView('notifications')}
+          aria-label={`Notifications, ${notifCount} non lues`}
+        >
+          Notifications {notifCount > 0 && (
+            <span className="nav-badge" role="status" aria-live="polite">
+              {notifCount > 9 ? '9+' : notifCount}
+            </span>
+          )}
         </button>
         {user && user.role === 'CONSULTANT' && (
           <button

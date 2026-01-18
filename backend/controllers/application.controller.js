@@ -1,5 +1,6 @@
 const Application = require('../models/Application');
 const Job = require('../models/Job');
+const { createNotification } = require('../utils/notify');
 
 const applyToJob = async (req, res) => {
   try {
@@ -18,6 +19,15 @@ const applyToJob = async (req, res) => {
       consultant: req.userId,
       coverLetter: coverLetter ? String(coverLetter).trim() : undefined,
       cvUrl: cvUrl ? String(cvUrl).trim() : undefined,
+    });
+
+    await createNotification({
+      user: job.createdBy,
+      type: 'APPLICATION_NEW',
+      title: 'Nouvelle candidature',
+      body: `Une candidature a été soumise pour ${job.title}`,
+      link: '/app?view=job-applications',
+      metadata: { jobId: job._id, applicationId: app._id },
     });
 
     res.status(201).json(app);
@@ -83,6 +93,15 @@ const updateApplicationStatus = async (req, res) => {
 
     app.status = normalized;
     await app.save();
+
+    await createNotification({
+      user: app.consultant,
+      type: 'APPLICATION_STATUS',
+      title: 'Statut de candidature',
+      body: `Votre candidature est maintenant: ${normalized}`,
+      link: '/app?view=applications',
+      metadata: { applicationId: app._id, status: normalized },
+    });
     res.json(app);
   } catch (err) {
     console.error('updateApplicationStatus error:', err.message || err);

@@ -1,5 +1,6 @@
 const ChatThread = require('../models/ChatThread');
 const ChatMessage = require('../models/ChatMessage');
+const { createNotification } = require('../utils/notify');
 
 const getOrCreateThread = async (req, res) => {
   try {
@@ -68,6 +69,20 @@ const sendMessage = async (req, res) => {
     });
     thread.lastMessageAt = new Date();
     await thread.save();
+
+    const recipients = (thread.participants || []).filter((p) => String(p) !== String(req.userId));
+    await Promise.all(
+      recipients.map((uid) =>
+        createNotification({
+          user: uid,
+          type: 'CHAT_MESSAGE',
+          title: 'Nouveau message',
+          body: 'Vous avez reçu un message',
+          link: '/app?view=chat',
+          metadata: { threadId: thread._id },
+        })
+      )
+    );
 
     const populated = await ChatMessage.findById(message._id).populate('sender', 'username email role profilePicture');
     res.status(201).json(populated);

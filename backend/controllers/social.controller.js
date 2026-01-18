@@ -2,6 +2,7 @@ const Post = require('../models/Post');
 const PostComment = require('../models/PostComment');
 const Follow = require('../models/Follow');
 const User = require('../models/User');
+const { createNotification } = require('../utils/notify');
 
 const createPost = async (req, res) => {
   try {
@@ -45,6 +46,16 @@ const toggleLike = async (req, res) => {
     if (index >= 0) post.likes.splice(index, 1);
     else post.likes.push(req.userId);
     await post.save();
+    if (index === -1 && String(post.author) !== String(req.userId)) {
+      await createNotification({
+        user: post.author,
+        type: 'POST_LIKE',
+        title: 'Nouveau like',
+        body: 'Votre publication a reçu un like',
+        link: '/app?view=social',
+        metadata: { postId: post._id },
+      });
+    }
     res.json({ likesCount: post.likes.length, liked: index === -1 });
   } catch (err) {
     console.error('toggleLike error:', err.message || err);
@@ -76,6 +87,17 @@ const addComment = async (req, res) => {
       author: req.userId,
       content: String(content).trim(),
     });
+    const post = await Post.findById(req.params.id).select('author').lean();
+    if (post && String(req.userId) !== String(post.author)) {
+      await createNotification({
+        user: post.author,
+        type: 'POST_COMMENT',
+        title: 'Nouveau commentaire',
+        body: 'Quelqu’un a commenté votre publication',
+        link: '/app?view=social',
+        metadata: { postId: req.params.id, commentId: comment._id },
+      });
+    }
     const populated = await PostComment.findById(comment._id).populate('author', 'username email role profilePicture');
     res.status(201).json(populated);
   } catch (err) {

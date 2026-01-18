@@ -522,6 +522,24 @@ textarea:focus {
   flex: 1;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.simple-list-row.unread {
+  border-color: rgba(59,130,246,0.25);
+  background: rgba(59,130,246,0.08);
+}
+
 @media (max-width: 900px) {
   .chat-board {
     grid-template-columns: 1fr;
