@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchNotifications, markRead, markAllRead } from '../api/notifications';
+import { getSocket } from '../services/socket';
 
 export default function NotificationsBoard() {
   const [items, setItems] = useState([]);
@@ -14,6 +15,13 @@ export default function NotificationsBoard() {
 
   useEffect(() => {
     load();
+    const socket = getSocket();
+    const onNotif = (payload) => {
+      if (!payload) return;
+      setItems((prev) => [payload, ...prev]);
+    };
+    socket.on('notification', onNotif);
+    return () => socket.off('notification', onNotif);
   }, []);
 
   const onRead = async (id) => {

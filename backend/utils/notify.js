@@ -1,9 +1,12 @@
 const Notification = require('../models/Notification');
+const { emitToUser } = require('./realtime');
 
 const createNotification = async ({ user, type, title, body, link, metadata }) => {
   if (!user) return null;
   try {
-    return await Notification.create({ user, type, title, body, link, metadata });
+    const doc = await Notification.create({ user, type, title, body, link, metadata });
+    emitToUser(user, 'notification', doc);
+    return doc;
   } catch (err) {
     console.error('createNotification error:', err.message || err);
     return null;

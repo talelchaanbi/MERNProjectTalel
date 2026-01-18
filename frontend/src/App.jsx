@@ -132,7 +132,7 @@ function App() {
         {view === 'dashboard' && (
           <>
             <CurrentUserCard user={user} />
-            <DashboardStats />
+            {user?.role === 'ADMIN' && <DashboardStats />}
             <RecommendationsBoard user={user} />
             <div className="card">
               <h2>Bienvenue</h2>
@@ -155,7 +155,7 @@ function App() {
         )}
 
         {view === 'chat' && (
-          <ChatBoard />
+          <ChatBoard user={user} />
         )}
 
         {view === 'notifications' && (

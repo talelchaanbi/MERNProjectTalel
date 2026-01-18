@@ -1,6 +1,7 @@
 const ChatThread = require('../models/ChatThread');
 const ChatMessage = require('../models/ChatMessage');
 const { createNotification } = require('../utils/notify');
+const { emitToUser } = require('../utils/realtime');
 
 const getOrCreateThread = async (req, res) => {
   try {
@@ -66,6 +67,7 @@ const sendMessage = async (req, res) => {
       thread: req.params.id,
       sender: req.userId,
       content: String(content).trim(),
+      readBy: [req.userId],
     });
     thread.lastMessageAt = new Date();
     await thread.save();
@@ -86,6 +88,12 @@ const sendMessage = async (req, res) => {
 
     const populated = await ChatMessage.findById(message._id).populate('sender', 'username email role profilePicture');
     res.status(201).json(populated);
+
+    // emit to participants in thread room
+    const participants = (thread.participants || []).map(String);
+    participants.forEach((uid) => {
+      emitToUser(uid, 'chat:message', { threadId: String(thread._id), message: populated });
+    });
   } catch (err) {
     console.error('sendMessage error:', err.message || err);
     res.status(500).json({ msg: 'Server error' });

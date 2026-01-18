@@ -1,10 +1,14 @@
 const path = require('path');
 const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const dns = require('dns');
 const express = require('express');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
+const { Server: SocketIOServer } = require('socket.io');
+const { setSocketServer } = require('./utils/realtime');
+const ChatThread = require('./models/ChatThread');
 require('dotenv').config();
 
 const app = express();
@@ -75,17 +79,16 @@ const startServer = async () => {
       console.error('Session store error:', err);
     });
 
-    app.use(
-      session({
-        name: 'sid',
-        secret: sessionSecret,
-        proxy: process.env.NODE_ENV === 'production',
-        resave: false,
-        saveUninitialized: false,
-        store: sessionStore,
-        cookie: cookieConfig,
-      })
-    );
+    const sessionMiddleware = session({
+      name: 'sid',
+      secret: sessionSecret,
+      proxy: process.env.NODE_ENV === 'production',
+      resave: false,
+      saveUninitialized: false,
+      store: sessionStore,
+      cookie: cookieConfig,
+    });
+    app.use(sessionMiddleware);
 
     await seedRoles();
     await seedAdminUser();
@@ -121,6 +124,7 @@ const startServer = async () => {
       console.log('Session store cleared (startup)');
     }
 
+    let server;
     if (process.env.HTTPS_ENABLED === 'true') {
       const keyPath = process.env.HTTPS_KEY_PATH;
       const certPath = process.env.HTTPS_CERT_PATH;
@@ -133,22 +137,82 @@ const startServer = async () => {
       const key = fs.readFileSync(path.resolve(keyPath));
       const cert = fs.readFileSync(path.resolve(certPath));
 
-      https.createServer({ key, cert }, app).listen(PORT, (err) => {
-        if (err) {
-          console.error('HTTPS server error:', err);
-        } else {
-          console.log(`HTTPS server running on https://localhost:${PORT}`);
-        }
-      });
+      server = https.createServer({ key, cert }, app);
     } else {
-      app.listen(PORT, (err) => {
-        if (err) {
-          console.error(err);
-        } else {
-          console.log(`HTTP server running on http://localhost:${PORT}`);
+      server = http.createServer(app);
+    }
+
+    const clientOrigin = process.env.CLIENT_ORIGIN || 'https://localhost:5173';
+    const io = new SocketIOServer(server, {
+      cors: {
+        origin: clientOrigin,
+        credentials: true,
+      },
+    });
+
+    io.use((socket, next) => {
+      sessionMiddleware(socket.request, {}, next);
+    });
+
+    const onlineUsers = new Set();
+
+    io.on('connection', (socket) => {
+      const userId = socket.request?.session?.userId;
+      if (!userId) {
+        socket.disconnect(true);
+        return;
+      }
+      socket.join(`user:${userId}`);
+      onlineUsers.add(String(userId));
+      io.emit('presence:update', { userId: String(userId), online: true });
+
+      socket.on('joinThread', async (threadId) => {
+        try {
+          if (!threadId) return;
+          const thread = await ChatThread.findById(threadId).select('participants').lean();
+          if (!thread) return;
+          const participants = (thread.participants || []).map(String);
+          if (!participants.includes(String(userId))) return;
+          socket.join(`thread:${threadId}`);
+        } catch (err) {
+          // ignore
         }
       });
-    }
+
+      socket.on('threadRead', async (threadId) => {
+        try {
+          if (!threadId) return;
+          const thread = await ChatThread.findById(threadId).select('participants').lean();
+          if (!thread) return;
+          const participants = (thread.participants || []).map(String);
+          if (!participants.includes(String(userId))) return;
+          await require('./models/ChatMessage').updateMany(
+            { thread: threadId, readBy: { $ne: userId } },
+            { $addToSet: { readBy: userId } }
+          );
+          io.to(`thread:${threadId}`).emit('chat:read', { threadId: String(threadId), userId: String(userId) });
+        } catch (err) {
+          // ignore
+        }
+      });
+
+      socket.on('disconnect', () => {
+        onlineUsers.delete(String(userId));
+        io.emit('presence:update', { userId: String(userId), online: false });
+      });
+    });
+
+    setSocketServer(io);
+
+    server.listen(PORT, (err) => {
+      if (err) {
+        console.error('Server error:', err);
+      } else if (process.env.HTTPS_ENABLED === 'true') {
+        console.log(`HTTPS server running on https://localhost:${PORT}`);
+      } else {
+        console.log(`HTTP server running on http://localhost:${PORT}`);
+      }
+    });
   } catch (error) {
     const details = `${error?.code ? `${error.code}: ` : ''}${error?.message || error}`;
     console.error('Server bootstrap failed:', details);

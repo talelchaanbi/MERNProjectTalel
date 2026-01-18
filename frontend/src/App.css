@@ -485,6 +485,9 @@ textarea:focus {
   border-radius: 10px;
   margin-bottom: 0.5rem;
   color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .chat-thread.active {
@@ -511,6 +514,21 @@ textarea:focus {
   display: flex;
   gap: 0.6rem;
   align-items: baseline;
+}
+
+.chat-thread-title {
+  font-weight: 600;
+}
+
+.chat-thread-status {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.chat-read {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .chat-input {

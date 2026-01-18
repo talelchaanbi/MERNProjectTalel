@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, Github, User, LogOut, MoreVertical } from 'lucide-react';
 import { fetchMessageCounts } from '../api/messages';
 import { fetchUnreadCount } from '../api/notifications';
+import { getSocket } from '../services/socket';
 
 export default function Navbar({ user, logout, setView, currentView }) {
   // Prefer showing the user's last name (nom) as a friendly greeting.
@@ -93,9 +94,16 @@ export default function Navbar({ user, logout, setView, currentView }) {
     }
     window.addEventListener('messages:updated', onUpdated);
     window.addEventListener('message:read', onMessageRead);
+    const socket = getSocket();
+    const onNotif = () => {
+      setNotifCount((n) => n + 1);
+    };
+    socket.on('notification', onNotif);
+
     return () => {
       mounted = false;
       if (timer) clearInterval(timer);
+      socket.off('notification', onNotif);
       window.removeEventListener('messages:updated', onUpdated);
       window.removeEventListener('message:read', onMessageRead);
     };
