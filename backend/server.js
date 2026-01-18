@@ -93,6 +93,11 @@ const startServer = async () => {
     // routes
     app.use('/api/auth', require('./routes/auth.route'));
     app.use('/api/messages', require('./routes/message.route'));
+    app.use('/api/jobs', require('./routes/job.route'));
+    app.use('/api/applications', require('./routes/application.route'));
+    app.use('/api/profiles', require('./routes/profile.route'));
+    app.use('/api/social', require('./routes/social.route'));
+    app.use('/api/chat', require('./routes/chat.route'));
 
     // Serve React build (copied to backend/public) in production.
     const publicDir = path.join(__dirname, 'public');

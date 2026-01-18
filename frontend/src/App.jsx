@@ -12,6 +12,12 @@ import VerifyPage from './components/VerifyPage';
 import MessagesList from './components/MessagesList';
 import ContactModal from './components/ContactModal';
 import Footer from './components/Footer';
+import JobsBoard from './components/JobsBoard';
+import ApplicationsBoard from './components/ApplicationsBoard';
+import JobApplicationsBoard from './components/JobApplicationsBoard';
+import SocialFeed from './components/SocialFeed';
+import ConnectionsBoard from './components/ConnectionsBoard';
+import ChatBoard from './components/ChatBoard';
 
 function App() {
   const dispatch = useDispatch();
@@ -54,6 +60,19 @@ function App() {
       localStorage.setItem('app:view', view);
     } catch (e) {}
   }, [view]);
+
+  useEffect(() => {
+    function onChatOpen(e) {
+      if (e?.detail?.threadId) {
+        try {
+          localStorage.setItem('chat:threadId', e.detail.threadId);
+        } catch (err) {}
+        setView('chat');
+      }
+    }
+    window.addEventListener('chat:open', onChatOpen);
+    return () => window.removeEventListener('chat:open', onChatOpen);
+  }, []);
 
   useEffect(() => {
     try {
@@ -116,6 +135,30 @@ function App() {
               <p>Utilisez la barre de navigation pour accéder aux fonctionnalités.</p>
             </div>
           </>
+        )}
+
+        {view === 'jobs' && (
+          <JobsBoard user={user} />
+        )}
+
+        {view === 'social' && (
+          <SocialFeed user={user} />
+        )}
+
+        {view === 'connections' && (
+          <ConnectionsBoard />
+        )}
+
+        {view === 'chat' && (
+          <ChatBoard />
+        )}
+
+        {view === 'applications' && user.role === 'CONSULTANT' && (
+          <ApplicationsBoard />
+        )}
+
+        {view === 'job-applications' && (user.role === 'RECRUT' || user.role === 'ADMIN') && (
+          <JobApplicationsBoard />
         )}
 
         {view === 'users' && user.role === 'ADMIN' && (

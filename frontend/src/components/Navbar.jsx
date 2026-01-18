@@ -103,6 +103,46 @@ export default function Navbar({ user, logout, setView, currentView }) {
         >
           Tableau de bord
         </button>
+        <button
+          className={`nav-item ${currentView === 'jobs' ? 'active' : ''}`}
+          onClick={() => setView('jobs')}
+        >
+          Offres
+        </button>
+        <button
+          className={`nav-item ${currentView === 'social' ? 'active' : ''}`}
+          onClick={() => setView('social')}
+        >
+          Fil d'actualité
+        </button>
+        <button
+          className={`nav-item ${currentView === 'connections' ? 'active' : ''}`}
+          onClick={() => setView('connections')}
+        >
+          Réseau
+        </button>
+        <button
+          className={`nav-item ${currentView === 'chat' ? 'active' : ''}`}
+          onClick={() => setView('chat')}
+        >
+          Messages
+        </button>
+        {user && user.role === 'CONSULTANT' && (
+          <button
+            className={`nav-item ${currentView === 'applications' ? 'active' : ''}`}
+            onClick={() => setView('applications')}
+          >
+            Mes candidatures
+          </button>
+        )}
+        {(user && (user.role === 'RECRUT' || user.role === 'ADMIN')) && (
+          <button
+            className={`nav-item ${currentView === 'job-applications' ? 'active' : ''}`}
+            onClick={() => setView('job-applications')}
+          >
+            Candidatures
+          </button>
+        )}
         {user && user.role === 'ADMIN' && (
           <>
             <button 
