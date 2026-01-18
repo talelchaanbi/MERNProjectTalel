@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fetchThreads, fetchMessages, sendMessage } from '../api/chat';
 import { getSocket } from '../services/socket';
 
@@ -8,6 +8,7 @@ export default function ChatBoard({ user }) {
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState('');
   const [presence, setPresence] = useState({});
+  const selectedRef = useRef(null);
 
   const loadThreads = async () => {
     const data = await fetchThreads();
@@ -41,11 +42,11 @@ export default function ChatBoard({ user }) {
 
   useEffect(() => {
     const socket = getSocket();
-    if (selected?._id) socket.emit('joinThread', selected._id);
-    if (selected?._id) socket.emit('threadRead', selected._id);
+    socket.connect();
     const onMessage = (payload) => {
       if (!payload?.message || !payload?.threadId) return;
-      if (payload.threadId !== selected?._id) return;
+      const currentThreadId = selectedRef.current;
+      if (payload.threadId !== currentThreadId) return;
       setMessages((prev) => {
         if (prev.some((m) => m._id === payload.message._id)) return prev;
         return [...prev, payload.message];
@@ -57,7 +58,7 @@ export default function ChatBoard({ user }) {
       setPresence((prev) => ({ ...prev, [payload.userId]: payload.online }));
     };
     const onRead = (payload) => {
-      if (!payload?.threadId || payload.threadId !== selected?._id) return;
+      if (!payload?.threadId || payload.threadId !== selectedRef.current) return;
       const readerId = payload.userId;
       setMessages((prev) =>
         prev.map((m) =>
@@ -75,6 +76,15 @@ export default function ChatBoard({ user }) {
       socket.off('presence:update', onPresence);
       socket.off('chat:read', onRead);
     };
+  }, []);
+
+  useEffect(() => {
+    selectedRef.current = selected?._id || null;
+    const socket = getSocket();
+    if (selected?._id) {
+      socket.emit('joinThread', selected._id);
+      socket.emit('threadRead', selected._id);
+    }
   }, [selected?._id]);
 
   const onSend = async () => {

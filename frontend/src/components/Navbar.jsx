@@ -56,6 +56,9 @@ export default function Navbar({ user, logout, setView, currentView }) {
   useEffect(() => {
     let mounted = true;
     let timer = null;
+    const socket = getSocket();
+    if (user) socket.connect();
+    else socket.disconnect();
     const loadCounts = async () => {
       try {
         const c = await fetchMessageCounts();
@@ -94,7 +97,6 @@ export default function Navbar({ user, logout, setView, currentView }) {
     }
     window.addEventListener('messages:updated', onUpdated);
     window.addEventListener('message:read', onMessageRead);
-    const socket = getSocket();
     const onNotif = () => {
       setNotifCount((n) => n + 1);
     };

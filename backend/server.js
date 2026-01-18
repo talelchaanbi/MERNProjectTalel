@@ -76,8 +76,22 @@ const startServer = async () => {
     });
 
     sessionStore.on('error', (err) => {
+      if (String(err?.message || '').includes('Unable to find the session to touch')) return;
       console.error('Session store error:', err);
     });
+
+    // suppress noisy touch errors when a stale session cookie is presented
+    if (typeof sessionStore.touch === 'function') {
+      const originalTouch = sessionStore.touch.bind(sessionStore);
+      sessionStore.touch = (sid, session, callback) => {
+        return originalTouch(sid, session, (err) => {
+          if (String(err?.message || '').includes('Unable to find the session to touch')) {
+            return callback?.();
+          }
+          return callback?.(err);
+        });
+      };
+    }
 
     const sessionMiddleware = session({
       name: 'sid',
